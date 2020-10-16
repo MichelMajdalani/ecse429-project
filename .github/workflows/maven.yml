@@ -18,10 +18,13 @@ jobs:
       working-directory: ./api_test
     steps:
     - uses: actions/checkout@v2
-    - name: Set up JDK 1.8
+    - name: Set up JDK 1.11
       uses: actions/setup-java@v1
       with:
-        java-version: 1.8
+        java-version: 1.11
+    
+    - name: Start API
+      run: java -jar runTodoManagerRestAPI-1.5.5.jar &
     - name: Build and test with Maven
       run: mvn test
       working-directory: ${{env.working-directory}}
