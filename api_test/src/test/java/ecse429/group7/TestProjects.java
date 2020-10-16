@@ -54,7 +54,7 @@ public class TestProjects extends BaseTest
 
     //HEAD /projects
     @Test
-    public void testHeadTodos()
+    public void testHeadProjects()
     {
         assertHeadStatusCode("/projects", STATUS_CODE_OK);
     }
@@ -192,4 +192,230 @@ public class TestProjects extends BaseTest
         assertEquals(response.getBody().getObject().getJSONArray("errorMessages").getString(0), "Failed Validation: completed should be BOOLEAN");
     }
 
+      //GET /projects/:id
+      @Test
+      public void testGetProjectIdStatusCode()
+      {
+          assertGetStatusCode("/projects/1", STATUS_CODE_OK);
+      }
+  
+      @Test
+      public void testGetProjectsIdTitle()
+      {
+          HttpResponse<JsonNode> response = Unirest.get("/projects/1").asJson();
+          assertEquals(response.getBody().getObject().getJSONArray("projects").getJSONObject(0).getString("title"), "Office Work");
+      }
+
+    //HEAD /projects/:id
+    @Test
+    public void testHeadIdProjects()
+    {
+        assertHeadStatusCode("/projects/1", STATUS_CODE_OK);
+    }
+
+    //POST /projects/:id
+    @Test
+    public void testPostProjectsIdInvalidCompletionJSONStatusCode()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/projects/1")
+        .header("Content-Type", "application/json")
+        .body("{\n    \"title\":\"New Title\",\n    \"completed\":\"true\"\n}")
+        .asJson();
+      
+        assertEquals(response.getStatus(), STATUS_CODE_BAD_REQUEST);
+    }
+
+    @Test
+    public void testPostProjectsIdInvalidCompletionJSONErrorMessage()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/projects/1")
+        .header("Content-Type", "application/json")
+        .body("{\n    \"title\":\"New Title\",\n    \"completed\":\"true\"\n}")
+        .asJson();   
+
+        assertEquals(response.getBody().getObject().getJSONArray("errorMessages").getString(0), "Failed Validation: completed should be BOOLEAN");
+    }
+
+    @Test
+    public void testPostProjectsIdJSONStatusCode()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/projects/1")
+        .header("Content-Type", "application/json")
+        .body("{\n    \"title\":\"New Title\",\n    \"completed\":true\n}")
+        .asJson();
+      
+        // Reset to previous state
+        Unirest.post("/projects/1")
+        .header("Content-Type", "application/json")
+        .body("{\n    \"title\": \"Office Work\",\n    \"completed\": false,\n    \"active\": false,\n    \"description\": \"\"   \n}\n").asString();
+        
+        assertEquals(response.getStatus(), STATUS_CODE_OK);
+    }
+
+    @Test
+    public void testPostProjectsIdJSONTitle()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/projects/1")
+        .header("Content-Type", "application/json")
+        .body("{\n    \"title\":\"New Title\",\n    \"completed\":true\n}")
+        .asJson();
+        
+        // Reset to previous state
+        Unirest.post("/projects/1")
+        .header("Content-Type", "application/json")
+        .body("{\n    \"title\": \"Office Work\",\n    \"completed\": false,\n    \"active\": false,\n    \"description\": \"\"   \n}\n").asString();
+        
+        assertEquals(response.getBody().getObject().getString("title"), "New Title");
+    }
+
+    @Test
+    public void testPostProjectsIdJSONCompletion()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/projects/1")
+        .header("Content-Type", "application/json")
+        .body("{\n    \"title\":\"New Title\",\n    \"completed\":true\n}")
+        .asJson();
+        
+        // Reset to previous state
+        Unirest.post("/projects/1")
+        .header("Content-Type", "application/json")
+        .body("{\n    \"title\": \"Office Work\",\n    \"completed\": false,\n    \"active\": false,\n    \"description\": \"\"   \n}\n").asString();
+        
+        assertEquals(response.getBody().getObject().getString("completed"), "true");
+    }
+
+    @Test
+    public void testPostProjectsIdXMLStatusCode()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/projects/1")
+        .header("Content-Type", "application/xml")
+        .body("<project><title>New Title</title><completed>true</completed></project>\n")
+        .asJson();
+      
+        // Reset to previous state
+        Unirest.post("/projects/1")
+        .header("Content-Type", "application/json")
+        .body("{\n    \"title\": \"Office Work\",\n    \"completed\": false,\n    \"active\": false,\n    \"description\": \"\"   \n}\n").asString();
+        
+        assertEquals(response.getStatus(), STATUS_CODE_OK);
+    }
+
+    @Test
+    public void testPostProjectsIdXMLTitle()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/projects/1")
+        .header("Content-Type", "application/xml")
+        .body("<project><title>New Title</title><completed>true</completed></project>\n")
+        .asJson();
+        
+        // Reset to previous state
+        Unirest.post("/projects/1")
+        .header("Content-Type", "application/json")
+        .body("{\n    \"title\": \"Office Work\",\n    \"completed\": false,\n    \"active\": false,\n    \"description\": \"\"   \n}\n").asString();
+        
+        assertEquals(response.getBody().getObject().getString("title"), "New Title");
+    }
+
+    @Test
+    public void testPostProjectsIdXMLCompletion()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/projects/1")
+        .header("Content-Type", "application/xml")
+        .body("<project><title>New Title</title><completed>true</completed></project>\n")
+        .asJson();
+        
+        // Reset to previous state
+        Unirest.post("/projects/1")
+        .header("Content-Type", "application/json")
+        .body("{\n    \"title\": \"Office Work\",\n    \"completed\": false,\n    \"active\": false,\n    \"description\": \"\"   \n}\n").asString();
+        
+        assertEquals(response.getBody().getObject().getString("completed"), "true");
+    }
+
+    //PUT /projects/:id
+    @Test
+    public void testPutProjectsWithTasksJSONStatusCode()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/projects/1")
+        .header("Content-Type", "application/json")
+        .body("   \n   {\"description\":\"test new description\",\n   \"tasks\": [\n       {\n           \"id\": 1\n       },\n       {\n           \"id\": 2\n       }\n   ]}\n")
+        .asJson();
+        
+        assertEquals(response.getStatus(), STATUS_CODE_BAD_REQUEST);
+    }
+
+    @Test
+    public void testPutProjectsWithTasksJSONErrorMessages()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/projects/1")
+        .header("Content-Type", "application/json")
+        .body("   \n   {\"description\":\"test new description\",\n   \"tasks\": [\n       {\n           \"id\": 1\n       },\n       {\n           \"id\": 2\n       }\n   ]}\n")
+        .asJson();
+        
+        assertEquals(response.getBody().getObject().getJSONArray("errorMessages").getString(0), "Could not find field: tasks");
+    }
+
+    @Test
+    public void testPutProjectsJSONStatusCode()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/projects/1")
+        .header("Content-Type", "application/json")
+        .body("   \n   {\"description\":\"test new description\"}\n")
+        .asJson();
+
+        // Reset to previous state
+        Unirest.post("/projects/1")
+        .header("Content-Type", "application/json")
+        .body("{\n    \"title\": \"Office Work\",\n    \"completed\": false,\n    \"active\": false,\n    \"description\": \"\"   \n}\n").asString();
+        
+        assertEquals(response.getStatus(), STATUS_CODE_OK);
+    }
+
+    @Test
+    public void testPutProjectsJSONDescription()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/projects/1")
+        .header("Content-Type", "application/json")
+        .body("   \n   {\"description\":\"test new description\"}\n")
+        .asJson();
+
+        // Reset to previous state
+        Unirest.post("/projects/1")
+        .header("Content-Type", "application/json")
+        .body("{\n    \"title\": \"Office Work\",\n    \"completed\": false,\n    \"active\": false,\n    \"description\": \"\"   \n}\n").asString();
+        
+        assertEquals(response.getBody().getObject().getString("description"), "test new description");
+    }
+
+    @Test
+    public void testPutProjectsXMLStatusCode()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/projects/1")
+        .header("Content-Type", "application/xml")
+        .body("<project><description>test new description</description></project>")
+        .asJson();
+
+        // Reset to previous state
+        Unirest.post("/projects/1")
+        .header("Content-Type", "application/json")
+        .body("{\n    \"title\": \"Office Work\",\n    \"completed\": false,\n    \"active\": false,\n    \"description\": \"\"   \n}\n").asString();
+        
+        assertEquals(response.getStatus(), STATUS_CODE_OK);
+    }
+
+    @Test
+    public void testPutProjectsXMLDescription()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/projects/1")
+        .header("Content-Type", "application/xml")
+        .body("<project><description>test new description</description></project>")
+        .asJson();
+
+        // Reset to previous state
+        Unirest.post("/projects/1")
+        .header("Content-Type", "application/json")
+        .body("{\n    \"title\": \"Office Work\",\n    \"completed\": false,\n    \"active\": false,\n    \"description\": \"\"   \n}\n").asString();
+        
+        assertEquals(response.getBody().getObject().getString("description"), "test new description");
+    }
 }
