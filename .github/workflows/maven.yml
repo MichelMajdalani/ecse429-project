@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      working-directory: ./api_tests
+      working-directory: ./api_test
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 1.8
