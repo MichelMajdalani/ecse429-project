@@ -436,11 +436,71 @@ public class TestTodos extends BaseTest
         assertGetStatusCode("/todos/2/tasksof", STATUS_CODE_OK);
     }
 
-    // @Test
-    // public void testGetTodosResponseSize()
-    // {
-    //     HttpResponse<JsonNode> response = Unirest.get("/todos").asJson();
-    //     assertEquals(response.getBody().getObject().getJSONArray("todos").length(), 2);
-    // }
-}
+    @Test
+    public void testGetTodosTaskOfResponseSize()
+    {
+        HttpResponse<JsonNode> response = Unirest.get("/todos/1/tasksof").asJson();
+        assertEquals(response.getBody().getObject().getJSONArray("projects").length(), 1);
+    }
 
+    @Test
+    public void testGetTodosTaskOfTitle()
+    {
+        HttpResponse<JsonNode> response = Unirest.get("/todos/1/tasksof").asJson();
+        assertEquals(response.getBody().getObject().getJSONArray("projects").getJSONObject(0).getString("title"), "Office Work");
+    }
+
+    @Test
+    public void testGetTodosTaskOfCompleted()
+    {
+        HttpResponse<JsonNode> response = Unirest.get("/todos/1/tasksof").asJson();
+        assertEquals(response.getBody().getObject().getJSONArray("projects").getJSONObject(0).getString("completed"), "false");
+    }
+
+    @Test
+    public void testGetTodosTaskOfTasksArray()
+    {
+        HttpResponse<JsonNode> response = Unirest.get("/todos/1/tasksof").asJson();
+        assertEquals(response.getBody().getObject().getJSONArray("projects").getJSONObject(0).getJSONArray("tasks").length(), 2);
+    }
+
+    // HEAD /todos/:id/tasksof
+    @Test
+    public void testHeadTodosTasksof()
+    {
+        assertHeadStatusCode("/todos/1/tasksof", STATUS_CODE_OK);
+    }
+
+    // POST /todos/:id/tasksof
+    @Test
+    public void testPostTodosTaskofInvalidErrorMessage()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/todos/5/tasksof").asJson();
+        
+        assertEquals(response.getBody().getObject().getJSONArray("errorMessages").getString(0), "Could not find parent thing for relationship todos/5/tasksof");
+    }
+
+    @Test
+    public void testPostTodosTaskofInvalidStatusCode()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/todos/5/tasksof").asJson();
+        
+        assertEquals(response.getStatus(), STATUS_CODE_NOT_FOUND);
+    }
+
+    @Test
+    public void testPostTodosTaskofWithJSONIdStatusCode()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/todos/1/tasksof").body("{\n\"id\":1\n}\n").asJson();
+        
+        assertEquals(response.getStatus(), STATUS_CODE_NOT_FOUND);
+    }
+
+    @Test
+    public void testPostTodosTaskofWithJSONIdErrorMessage()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/todos/1/tasksof").body("{\n\"id\":1\n}\n").asJson();
+        
+        assertEquals(response.getBody().getObject().getJSONArray("errorMessages").getString(0), "Could not find thing matching value for id");
+    }
+}
