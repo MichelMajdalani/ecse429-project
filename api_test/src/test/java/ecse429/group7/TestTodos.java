@@ -22,6 +22,22 @@ public class TestTodos extends BaseTest
         Unirest.delete("/todos/" + String.valueOf(id)).asJson();
     }
 
+    // Delete project to reset state of database (must delete both association and new object)
+    public void deleteTodoTasksOfById(HttpResponse<JsonNode> response, int id)
+    {
+        int created_id = response.getBody().getObject().getInt("id");
+        Unirest.delete("/todos/" + String.valueOf(id) + "/tasksof/" + String.valueOf(created_id)).asJson();
+        Unirest.delete("/projects/" + String.valueOf(created_id)).asJson();
+    }
+
+    // Delete category to reset state of database (must delete both association and new object)
+    public void deleteCategoryOfById(HttpResponse<JsonNode> response, int id)
+    {
+        int created_id = response.getBody().getObject().getInt("id");
+        Unirest.delete("/todos/" + String.valueOf(id) + "/categories/" + String.valueOf(created_id)).asJson();
+        Unirest.delete("/categories/" + String.valueOf(created_id)).asJson();
+    }
+
     // GET /todos
     @Test
     public void testGetTodosStatusCode()
@@ -436,11 +452,320 @@ public class TestTodos extends BaseTest
         assertGetStatusCode("/todos/2/tasksof", STATUS_CODE_OK);
     }
 
-    // @Test
-    // public void testGetTodosResponseSize()
-    // {
-    //     HttpResponse<JsonNode> response = Unirest.get("/todos").asJson();
-    //     assertEquals(response.getBody().getObject().getJSONArray("todos").length(), 2);
-    // }
-}
+    @Test
+    public void testGetTodosTaskOfResponseSize()
+    {
+        HttpResponse<JsonNode> response = Unirest.get("/todos/1/tasksof").asJson();
+        assertEquals(response.getBody().getObject().getJSONArray("projects").length(), 1);
+    }
 
+    @Test
+    public void testGetTodosTaskOfTitle()
+    {
+        HttpResponse<JsonNode> response = Unirest.get("/todos/1/tasksof").asJson();
+        assertEquals(response.getBody().getObject().getJSONArray("projects").getJSONObject(0).getString("title"), "Office Work");
+    }
+
+    @Test
+    public void testGetTodosTaskOfCompleted()
+    {
+        HttpResponse<JsonNode> response = Unirest.get("/todos/1/tasksof").asJson();
+        assertEquals(response.getBody().getObject().getJSONArray("projects").getJSONObject(0).getString("completed"), "false");
+    }
+
+    @Test
+    public void testGetTodosTaskOfTasksArray()
+    {
+        HttpResponse<JsonNode> response = Unirest.get("/todos/1/tasksof").asJson();
+        assertEquals(response.getBody().getObject().getJSONArray("projects").getJSONObject(0).getJSONArray("tasks").length(), 2);
+    }
+
+    // HEAD /todos/:id/tasksof
+    @Test
+    public void testHeadTodosTasksof()
+    {
+        assertHeadStatusCode("/todos/1/tasksof", STATUS_CODE_OK);
+    }
+
+    // POST /todos/:id/tasksof
+    @Test
+    public void testPostTodosTaskofInvalidErrorMessage()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/todos/5/tasksof").asJson();
+        
+        assertEquals(response.getBody().getObject().getJSONArray("errorMessages").getString(0), "Could not find parent thing for relationship todos/5/tasksof");
+    }
+
+    @Test
+    public void testPostTodosTaskofInvalidStatusCode()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/todos/5/tasksof").asJson();
+        
+        assertEquals(response.getStatus(), STATUS_CODE_NOT_FOUND);
+    }
+
+    @Test
+    public void testPostTodosTaskofWithJSONIdStatusCode()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/todos/1/tasksof").body("{\n\"id\":1\n}\n").asJson();
+        
+        assertEquals(response.getStatus(), STATUS_CODE_NOT_FOUND);
+    }
+
+    @Test
+    public void testPostTodosTaskofWithJSONIdErrorMessage()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/todos/1/tasksof").body("{\n\"id\":1\n}\n").asJson();
+        
+        assertEquals(response.getBody().getObject().getJSONArray("errorMessages").getString(0), "Could not find thing matching value for id");
+    }
+
+    @Test
+    public void testPostTodosTaskOfWithEmptyBodyStatusCode()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/todos/1/tasksof").asJson();
+        
+        // Delete to reset database to original state 
+        deleteTodoTasksOfById(response, 1);
+
+        assertEquals(response.getStatus(), STATUS_CODE_CREATED);
+    }
+
+    @Test
+    public void testPostTodosTaskOfWithEmptyBodyTitle()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/todos/1/tasksof").asJson();
+        
+        // Delete to reset database to original state 
+        deleteTodoTasksOfById(response, 1);
+
+        assertEquals(response.getBody().getObject().getString("title"), "");
+    }
+
+    @Test
+    public void testPostTodosTaskOfWithEmptyBodyCompletion()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/todos/1/tasksof").asJson();
+        
+        // Delete to reset database to original state 
+        deleteTodoTasksOfById(response, 1);
+
+        assertEquals(response.getBody().getObject().getString("completed"), "false");
+    }
+
+    // DELETE /todos/:id/tasksof/:id
+    @Test
+    public void testDeleteTodosTaskofStatusCode()
+    {
+        // create todo taskof to delete
+        HttpResponse<JsonNode> response = Unirest.post("/todos/1/tasksof").asJson();
+        
+        int id = response.getBody().getObject().getInt("id");
+
+        response = Unirest.delete("/todos/1/tasksof/" + String.valueOf(id)).header("Content-Type", "application/json")
+        .asJson();
+
+        // Must also delete project
+        Unirest.delete("/projects/" + String.valueOf(id)).asJson();
+
+        assertEquals(response.getStatus(), STATUS_CODE_OK);
+    }
+
+    @Test
+    public void testDeleteTodosTasksOfVerifyDeletion()
+    {
+        // create todo tasksof to delete
+        HttpResponse<JsonNode> response = Unirest.post("/todos/1/tasksof").asJson();
+        
+        int id = response.getBody().getObject().getInt("id");
+
+        response = Unirest.get("/todos/1/tasksof").asJson();
+        int original_size = response.getBody().getObject().getJSONArray("projects").length();
+
+        response = Unirest.delete("/todos/1/tasksof/" + String.valueOf(id)).header("Content-Type", "application/json")
+        .asJson();
+
+        // Must also delete project
+        Unirest.delete("/projects/" + String.valueOf(id)).asJson();
+
+        response = Unirest.get("/todos/1/tasksof").asJson();
+        int new_size = response.getBody().getObject().getJSONArray("projects").length();
+
+        assertEquals(original_size - new_size, 1);
+    }
+
+    // GET /todos/:id/categories
+    @Test
+    public void testGetTodosCategoriesStatusCode()
+    {
+        assertGetStatusCode("/todos/1/categories", STATUS_CODE_OK);
+    }
+
+    @Test
+    public void testGetTodosCategoriesResponseSize()
+    {
+        HttpResponse<JsonNode> response = Unirest.get("/todos/1/categories").asJson();
+        assertEquals(response.getBody().getObject().getJSONArray("categories").length(), 1);
+    }
+
+    @Test
+    public void testGetTodosCategoriesTitle()
+    {
+        HttpResponse<JsonNode> response = Unirest.get("/todos/1/categories").asJson();
+        assertEquals(response.getBody().getObject().getJSONArray("categories").getJSONObject(0).getString("title"), "Office");
+    }
+
+    // HEAD /todos/:id/categories
+    @Test
+    public void testHeadTodosCategories()
+    {
+        assertHeadStatusCode("/todos/1/categories", STATUS_CODE_OK);
+    }    
+
+    // POST /todos/:id/categories
+    @Test
+    public void testPostTodosCategoriesWithJSONIdStatusCode()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/todos/1/categories").body("{\n\"id\":1\n}\n").asJson();
+        
+        assertEquals(response.getStatus(), STATUS_CODE_NOT_FOUND);
+    }
+
+    @Test
+    public void testPostTodosCategoriesWithJSONIdErrorMessage()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/todos/1/categories").body("{\n\"id\":1\n}\n").asJson();
+        
+        assertEquals(response.getBody().getObject().getJSONArray("errorMessages").getString(0), "Could not find thing matching value for id");
+    }
+
+    @Test
+    public void testPostTodosTaskOfWithJSONBodyStatusCode()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/todos/1/categories").body("{\"title\":\"Test Category\"}").asJson();
+        
+        // Delete to reset database to original state 
+        deleteCategoryOfById(response, 1);
+
+        assertEquals(response.getStatus(), STATUS_CODE_CREATED);
+    }
+
+    @Test
+    public void testPostTodosTaskOfWithJSONBodyTitle()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/todos/1/categories").body("{\"title\":\"Test Category\"}").asJson();
+        
+        // Delete to reset database to original state 
+        deleteCategoryOfById(response, 1);
+
+        assertEquals(response.getBody().getObject().getString("title"), "Test Category");
+    }
+
+    @Test
+    public void testPostTodosTaskOfWithJSONBodyDescription()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/todos/1/categories").body("{\"title\":\"Test Category\"}").asJson();
+        
+        // Delete to reset database to original state 
+        deleteCategoryOfById(response, 1);
+
+        assertEquals(response.getBody().getObject().getString("description"), "");
+    }
+
+    @Test
+    public void testPostTodosTaskOfWithXMLBodyStatusCode()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/todos/1/categories")
+        .header("Content-Type", "application/xml").body("<category><title>Test Category</title></category>").asJson();
+        
+        // Delete to reset database to original state 
+        deleteCategoryOfById(response, 1);
+
+        assertEquals(response.getStatus(), STATUS_CODE_CREATED);
+    }
+
+    @Test
+    public void testPostTodosTaskOfWithXMLBodyTitle()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/todos/1/categories")
+        .header("Content-Type", "application/xml").body("<category><title>Test Category</title></category>").asJson();
+        
+        // Delete to reset database to original state 
+        deleteCategoryOfById(response, 1);
+
+        assertEquals(response.getBody().getObject().getString("title"), "Test Category");
+    }
+
+    @Test
+    public void testPostTodosTaskOfWithXMLBodyDescription()
+    {
+        HttpResponse<JsonNode> response = Unirest.post("/todos/1/categories")
+        .header("Content-Type", "application/xml").body("<category><title>Test Category</title></category>").asJson();
+        
+        // Delete to reset database to original state 
+        deleteCategoryOfById(response, 1);
+
+        assertEquals(response.getBody().getObject().getString("description"), "");
+    }
+
+    // DELETE /todos/:id/categories/:id
+    @Test
+    public void testDeleteTodosCategoriesStatusCode()
+    {
+        // create todo category to delete
+        HttpResponse<JsonNode> response = Unirest.post("/todos/1/categories")
+        .header("Content-Type", "application/xml").body("<category><title>Test Category</title></category>").asJson();
+                
+        int id = response.getBody().getObject().getInt("id");
+
+        response = Unirest.delete("/todos/1/categories/" + String.valueOf(id)).header("Content-Type", "application/json")
+        .asJson();
+
+        // Must also delete category
+        Unirest.delete("/categories/" + String.valueOf(id)).asJson();
+
+        assertEquals(response.getStatus(), STATUS_CODE_OK);
+    }
+  
+    @Test
+    public void testDeleteTodosCategoriesVerifyDeletion()
+    {
+        // create todo tasksof to delete
+        HttpResponse<JsonNode> response = Unirest.post("/todos/1/categories")
+        .header("Content-Type", "application/xml").body("<category><title>Test Category</title></category>").asJson();
+                
+        int id = response.getBody().getObject().getInt("id");
+
+        response = Unirest.get("/todos/1/categories").asJson();
+        int original_size = response.getBody().getObject().getJSONArray("categories").length();
+
+        response = Unirest.delete("/todos/1/categories/" + String.valueOf(id)).header("Content-Type", "application/json")
+        .asJson();
+
+        // Must also delete category
+        Unirest.delete("/categories/" + String.valueOf(id)).asJson();
+
+        response = Unirest.get("/todos/1/categories").asJson();
+        int new_size = response.getBody().getObject().getJSONArray("categories").length();
+
+        assertEquals(original_size - new_size, 1);
+    }
+
+    @Test
+    public void testDeleteInvalidTodosCategoriesStatusCode()
+    {
+        HttpResponse<JsonNode> response = Unirest.delete("/todos/1/categories/8").header("Content-Type", "application/json")
+        .asJson();
+
+        assertEquals(response.getStatus(), STATUS_CODE_NOT_FOUND);
+    }
+
+    @Test
+    public void testDeleteInvalidTodosCategoriesErrorMessage()
+    {
+        HttpResponse<JsonNode> response = Unirest.delete("/todos/1/categories/8").header("Content-Type", "application/json")
+        .asJson();
+
+        assertEquals(response.getBody().getObject().getJSONArray("errorMessages").getString(0), "Could not find any instances with todos/1/categories/8");
+    }
+}
