@@ -89,14 +89,14 @@ public class TestTodos extends BaseTest
     {
         HttpResponse<JsonNode> response = Unirest.get("/todos/2").asJson();
         assertEquals(response.getBody().getObject().getJSONArray("todos").getJSONObject(0)
-            .getJSONArray("task-of").getJSONObject(0).getInt("id"), 1);
+            .getJSONArray("tasksof").getJSONObject(0).getInt("id"), 1);
     }
 
     // HEAD /todos
     @Test
     public void testHeadTodos()
     {
-        assertHeadStatusCode("/todos", STATUS_CODE_METHOD_NOT_ALLOWED);
+        assertHeadStatusCode("/todos", STATUS_CODE_OK);
     }
 
     // POST /todos
@@ -298,7 +298,7 @@ public class TestTodos extends BaseTest
         HttpResponse<JsonNode> response = Unirest.post("/todos").header("Content-Type", "application/json")
         .body("{\n    \"title\": \"Test429\",\n    \"description\": false,\n    \"inventedField\": \"test\"\n}\n").asJson();
         
-        assertEquals(response.getBody().getObject().getJSONArray("errorMessages").getString(0), "Could not find field: inventedField on Entity todo");
+        assertEquals(response.getBody().getObject().getJSONArray("errorMessages").getString(0), "Could not find field: inventedField");
     }
 
     @Test
@@ -309,6 +309,13 @@ public class TestTodos extends BaseTest
         .body("<todo>\n    <title>Test429</title><description>false</description><inventedField>test</inventedField>\n</todo>\n").asJson();
         
         assertEquals(response.getStatus(), STATUS_CODE_BAD_REQUEST);
+    }
+
+    // HEAD /todos:id
+    @Test
+    public void testHeadTodosWithId()
+    {
+        assertHeadStatusCode("/todos/1", STATUS_CODE_OK);
     }
 
     // PUT /todos/:id
@@ -323,7 +330,7 @@ public class TestTodos extends BaseTest
         // Reset to previous state
         Unirest.put("/todos/1")
         .header("Content-Type", "application/json")
-        .body("{\n\"doneStatus\": false,\n\"description\": \"\",\n\"title\": \"scan paperwork\",\n \"categories\": [\n{\n\"id\": \"1\"\n}\n],\n\"task-of\": [\n{\n\"id\": \"1\"\n}\n]\n}")
+        .body("{\n\"doneStatus\": false,\n\"description\": \"\",\n\"title\": \"scan paperwork\",\n \"categories\": [\n{\n\"id\": \"1\"\n}\n],\n\"tasksof\": [\n{\n\"id\": \"1\"\n}\n]\n}")
         .asString();
 
         assertEquals(response.getStatus(), STATUS_CODE_OK);
@@ -340,7 +347,7 @@ public class TestTodos extends BaseTest
         // Reset to previous state
         Unirest.put("/todos/1")
         .header("Content-Type", "application/json")
-        .body("{\n\"doneStatus\": false,\n\"description\": \"\",\n\"title\": \"scan paperwork\",\n \"categories\": [\n{\n\"id\": \"1\"\n}\n],\n\"task-of\": [\n{\n\"id\": \"1\"\n}\n]\n}")
+        .body("{\n\"doneStatus\": false,\n\"description\": \"\",\n\"title\": \"scan paperwork\",\n \"categories\": [\n{\n\"id\": \"1\"\n}\n],\n\"tasksof\": [\n{\n\"id\": \"1\"\n}\n]\n}")
         .asString();
 
         assertEquals(response.getBody().getObject().getString("title"), "New Title");
@@ -357,7 +364,7 @@ public class TestTodos extends BaseTest
         // Reset to previous state
         Unirest.put("/todos/1")
         .header("Content-Type", "application/json")
-        .body("{\n\"doneStatus\": false,\n\"description\": \"\",\n\"title\": \"scan paperwork\",\n \"categories\": [\n{\n\"id\": \"1\"\n}\n],\n\"task-of\": [\n{\n\"id\": \"1\"\n}\n]\n}")
+        .body("{\n\"doneStatus\": false,\n\"description\": \"\",\n\"title\": \"scan paperwork\",\n \"categories\": [\n{\n\"id\": \"1\"\n}\n],\n\"tasksof\": [\n{\n\"id\": \"1\"\n}\n]\n}")
         .asString();
 
         assertEquals(response.getStatus(), STATUS_CODE_OK);
@@ -374,7 +381,7 @@ public class TestTodos extends BaseTest
         // Reset to previous state
         Unirest.put("/todos/1")
         .header("Content-Type", "application/json")
-        .body("{\n\"doneStatus\": false,\n\"description\": \"\",\n\"title\": \"scan paperwork\",\n \"categories\": [\n{\n\"id\": \"1\"\n}\n],\n\"task-of\": [\n{\n\"id\": \"1\"\n}\n]\n}")
+        .body("{\n\"doneStatus\": false,\n\"description\": \"\",\n\"title\": \"scan paperwork\",\n \"categories\": [\n{\n\"id\": \"1\"\n}\n],\n\"tasksof\": [\n{\n\"id\": \"1\"\n}\n]\n}")
         .asString();
 
         assertEquals(response.getBody().getObject().getString("title"), "New Title");
@@ -398,30 +405,42 @@ public class TestTodos extends BaseTest
         assertEquals(response.getStatus(), STATUS_CODE_OK);
     }
 
-        // DELETE /todos/:id
-        @Test
-        public void testDeleteTodosVerifyDeletion()
-        {
-            // create todo to delete
-            HttpResponse<JsonNode> response = Unirest.post("/todos")
-            .header("Content-Type", "application/json")
-            .body("{\n    \"title\":\"New Title\",\n    \"description\":\"Test description\"\n}")
-            .asJson();
-            
-            int id = response.getBody().getObject().getInt("id");
+    @Test
+    public void testDeleteTodosVerifyDeletion()
+    {
+        // create todo to delete
+        HttpResponse<JsonNode> response = Unirest.post("/todos")
+        .header("Content-Type", "application/json")
+        .body("{\n    \"title\":\"New Title\",\n    \"description\":\"Test description\"\n}")
+        .asJson();
+        
+        int id = response.getBody().getObject().getInt("id");
 
-            response = Unirest.get("/todos").asJson();
-            int original_size = response.getBody().getObject().getJSONArray("todos").length();
-    
-            response = Unirest.delete("/todos/" + String.valueOf(id)).header("Content-Type", "application/json")
-            .asJson();
+        response = Unirest.get("/todos").asJson();
+        int original_size = response.getBody().getObject().getJSONArray("todos").length();
 
-            response = Unirest.get("/todos").asJson();
-            int new_size = response.getBody().getObject().getJSONArray("todos").length();
+        response = Unirest.delete("/todos/" + String.valueOf(id)).header("Content-Type", "application/json")
+        .asJson();
 
-    
-            assertEquals(original_size - new_size, 1);
-        }
+        response = Unirest.get("/todos").asJson();
+        int new_size = response.getBody().getObject().getJSONArray("todos").length();
 
+
+        assertEquals(original_size - new_size, 1);
+    }
+
+    // GET /todos/:id/tasksof
+    @Test
+    public void testGetTodosTaskOfStatusCode()
+    {
+        assertGetStatusCode("/todos/2/tasksof", STATUS_CODE_OK);
+    }
+
+    // @Test
+    // public void testGetTodosResponseSize()
+    // {
+    //     HttpResponse<JsonNode> response = Unirest.get("/todos").asJson();
+    //     assertEquals(response.getBody().getObject().getJSONArray("todos").length(), 2);
+    // }
 }
 
