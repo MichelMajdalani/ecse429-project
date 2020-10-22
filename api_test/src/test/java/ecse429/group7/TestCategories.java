@@ -24,7 +24,7 @@ public class TestCategories extends BaseTest
     public String getSecondCategoryState()
     {
         return "{\n    \"title\": \"Home\",\n  \"description\": \"\"   \n}\n";
-    }   
+    }
 
     public void resetFirstInitialState() {
         // Reset to previous state
@@ -98,10 +98,10 @@ public class TestCategories extends BaseTest
     {
         HttpResponse<JsonNode> response = Unirest.post("/categories").body("{\n\"description\":\"Test Description\",\n  \"title\":\"Test Title\"\n}")
         .asJson();
-        
+
         //Delete object created to reset state of database
         deleteCategoryById(response);
-        
+
         assertEquals(response.getStatus(), STATUS_CODE_CREATED);
     }
 
@@ -110,10 +110,10 @@ public class TestCategories extends BaseTest
     {
         HttpResponse<JsonNode> response = Unirest.post("/categories").body("{\n\"description\":\"Test Description\",\n   \"title\":\"Test Title\"\n}")
         .asJson();
-        
+
         //Delete object created to reset state of database
         deleteCategoryById(response);
-        
+
         assertEquals(response.getBody().getObject().getString("title"), "Test Title");
     }
 
@@ -122,10 +122,10 @@ public class TestCategories extends BaseTest
     {
         HttpResponse<JsonNode> response = Unirest.post("/categories").body("{\n\"description\":\"Test Description\",\n   \"title\":\"Test Title\"\n}")
         .asJson();
-        
+
         //Delete object created to reset state of database
         deleteCategoryById(response);
-        
+
         assertEquals(response.getBody().getObject().getString("description"), "Test Description");
     }
 
@@ -137,7 +137,7 @@ public class TestCategories extends BaseTest
 
         //Delete object created to reset state of database
         deleteCategoryById(response);
-        
+
         assertEquals(response.getStatus(), STATUS_CODE_CREATED);
     }
 
@@ -149,7 +149,7 @@ public class TestCategories extends BaseTest
 
         //Delete object created to reset state of database
         deleteCategoryById(response);
-        
+
         assertEquals(response.getBody().getObject().getString("title"), "Test Title");
     }
 
@@ -161,7 +161,7 @@ public class TestCategories extends BaseTest
 
         //Delete object created to reset state of database
         deleteCategoryById(response);
-        
+
         assertEquals(response.getBody().getObject().getString("description"), "Test Description");
     }
 
@@ -171,7 +171,7 @@ public class TestCategories extends BaseTest
     {
         HttpResponse<JsonNode> response = Unirest.post("/categories").body("{\n\"description\":\"Test Description\",\n  \"completed\":\"test\",\n    \"title\":\"Test Title\"\n}")
         .asJson();
-        
+
         assertEquals(response.getStatus(), STATUS_CODE_BAD_REQUEST);
     }
 
@@ -180,7 +180,7 @@ public class TestCategories extends BaseTest
     {
         HttpResponse<JsonNode> response = Unirest.post("/categories").body("{\n\"description\":\"Test Description\",\n  \"name\":\"test\",\n    \"title\":\"Test Title\"\n}")
         .asJson();
-        
+
         assertEquals(response.getBody().getObject().getJSONArray("errorMessages").getString(0), "Could not find field: name");
     }
 
@@ -189,7 +189,7 @@ public class TestCategories extends BaseTest
     {
         HttpResponse<JsonNode> response = Unirest.post("/categories").header("Content-Type", "application/xml")
         .body("<category>\n<description>Test Description</description>\n<completed>Test</completed>\n<title>Test Title</title>\n</category>\n").asJson();
-        
+
         assertEquals(response.getStatus(), STATUS_CODE_BAD_REQUEST);
     }
 
@@ -198,23 +198,23 @@ public class TestCategories extends BaseTest
     {
         HttpResponse<JsonNode> response = Unirest.post("/categories").header("Content-Type", "application/xml")
         .body("<category>\n<description>Test Description</description>\n<active>True</active>\n<name>Test</name>\n<title>Test Title</title>\n</category>\n").asJson();
-        
+
         assertEquals(response.getBody().getObject().getJSONArray("errorMessages").getString(0), "Could not find field: name");
     }
 
-      //GET /categories/:id
-      @Test
-      public void testGetCategoryIdStatusCode()
-      {
-          assertGetStatusCode("/categories/1", STATUS_CODE_OK);
-      }
-  
-      @Test
-      public void testGetCategoriesIdTitle()
-      {
-          HttpResponse<JsonNode> response = Unirest.get("/categories/1").asJson();
-          assertEquals(response.getBody().getObject().getJSONArray("categories").getJSONObject(0).getString("title"), "Office");
-      }
+    //GET /categories/:id
+    @Test
+    public void testGetCategoryIdStatusCode()
+    {
+        assertGetStatusCode("/categories/1", STATUS_CODE_OK);
+    }
+
+    @Test
+    public void testGetCategoriesIdTitle()
+    {
+        HttpResponse<JsonNode> response = Unirest.get("/categories/1").asJson();
+        assertEquals(response.getBody().getObject().getJSONArray("categories").getJSONObject(0).getString("title"), "Office");
+    }
 
     //HEAD /categories/:id
     @Test
@@ -231,7 +231,7 @@ public class TestCategories extends BaseTest
         .header("Content-Type", "application/json")
         .body("{\n    \"title\":\"New Title\",\n    \"name\":\"true\"\n}")
         .asJson();
-      
+
         assertEquals(response.getStatus(), STATUS_CODE_BAD_REQUEST);
     }
 
@@ -241,7 +241,7 @@ public class TestCategories extends BaseTest
         HttpResponse<JsonNode> response = Unirest.post("/categories/1")
         .header("Content-Type", "application/json")
         .body("{\n    \"title\":\"New Title\",\n    \"name\":\"true\"\n}")
-        .asJson();   
+        .asJson();
 
         assertEquals(response.getBody().getObject().getJSONArray("errorMessages").getString(0), "Could not find field: name");
     }
@@ -253,10 +253,10 @@ public class TestCategories extends BaseTest
         .header("Content-Type", "application/json")
         .body("{\n    \"title\":\"New Title\",\n    \"description\":\"New Description Title\"\n}")
         .asJson();
-      
+
         // Reset to previous state
         resetFirstInitialState();
-        
+
         assertEquals(response.getStatus(), STATUS_CODE_OK);
     }
 
@@ -267,7 +267,7 @@ public class TestCategories extends BaseTest
         .header("Content-Type", "application/json")
         .body("{\n    \"title\":\"New Title\",\n    \"description\":\"New Description Title\"\n}")
         .asJson();
-        
+
         // Reset to previous state
         resetFirstInitialState();
 
@@ -281,10 +281,10 @@ public class TestCategories extends BaseTest
         .header("Content-Type", "application/json")
         .body("{\n    \"title\":\"New Title\",\n    \"description\":\"New Description Title\"\n}")
         .asJson();
-        
+
         // Reset to previous state
         resetFirstInitialState();
-        
+
         assertEquals(response.getBody().getObject().getString("description"), "New Description Title");
     }
 
@@ -295,7 +295,7 @@ public class TestCategories extends BaseTest
         .header("Content-Type", "application/xml")
         .body("<category><title>New Title</title><description>New Description Title</description></category>\n")
         .asJson();
-      
+
         // Reset to previous state
         resetFirstInitialState();
 
@@ -309,7 +309,7 @@ public class TestCategories extends BaseTest
         .header("Content-Type", "application/xml")
         .body("<category><title>New Title</title><description>New Description Title</description></category>\n")
         .asJson();
-        
+
         // Reset to previous state
         resetFirstInitialState();
 
@@ -323,7 +323,7 @@ public class TestCategories extends BaseTest
         .header("Content-Type", "application/xml")
         .body("<category><title>New Title</title><description>New Description Title</description></category>\n")
         .asJson();
-        
+
         // Reset to previous state
         resetFirstInitialState();
 
@@ -338,7 +338,7 @@ public class TestCategories extends BaseTest
         .header("Content-Type", "application/json")
         .body("   \n   {\"description\":\"test new description\",\n   \"projects\": [\n       {\n           \"id\": 1\n       },\n       {\n           \"id\": 2\n       }\n   ]}\n")
         .asJson();
-        
+
         assertEquals(response.getStatus(), STATUS_CODE_BAD_REQUEST);
     }
 
@@ -349,7 +349,7 @@ public class TestCategories extends BaseTest
         .header("Content-Type", "application/json")
         .body("   \n   {\"description\":\"test new description\",\n   \"projects\": [\n       {\n           \"id\": 1\n       },\n       {\n           \"id\": 2\n       }\n   ]}\n")
         .asJson();
-        
+
         assertEquals(response.getBody().getObject().getJSONArray("errorMessages").getString(0), "Could not find field: projects");
     }
 
@@ -405,7 +405,7 @@ public class TestCategories extends BaseTest
 
         // Reset to previous state
         resetFirstInitialState();
-        
+
         assertEquals(response.getBody().getObject().getString("description"), "test new description");
     }
 
@@ -418,7 +418,7 @@ public class TestCategories extends BaseTest
         .header("Content-Type", "application/json")
         .body("{\n    \"title\":\"New Title\",\n    \"description\":\"Test description\"\n}")
         .asJson();
-        
+
         int id = response.getBody().getObject().getInt("id");
 
         response = Unirest.delete("/categories/" + String.valueOf(id)).header("Content-Type", "application/json")
@@ -435,7 +435,7 @@ public class TestCategories extends BaseTest
         .header("Content-Type", "application/json")
         .body("{\n    \"title\":\"New Title\",\n    \"description\":\"Test description\"\n}")
         .asJson();
-        
+
         int id = response.getBody().getObject().getInt("id");
 
         response = Unirest.get("/categories").asJson();
@@ -456,7 +456,7 @@ public class TestCategories extends BaseTest
      {
          assertGetStatusCode("/categories/1/todos", STATUS_CODE_OK);
      }
- 
+
      @Test
      public void testGetCategoriesCategoriesResponseSize()
      {
@@ -481,7 +481,7 @@ public class TestCategories extends BaseTest
         .asJson();
 
         // reset database private state
-        deleteTodosOfCategoryById(response, 1);        
+        deleteTodosOfCategoryById(response, 1);
 
         assertEquals(response.getStatus(), STATUS_CODE_CREATED);
     }
@@ -495,7 +495,7 @@ public class TestCategories extends BaseTest
         .asJson();
 
         // reset database private state
-        deleteTodosOfCategoryById(response, 1);        
+        deleteTodosOfCategoryById(response, 1);
 
         assertEquals(response.getBody().getObject().getString("title"), "Test Title");
     }
@@ -509,7 +509,7 @@ public class TestCategories extends BaseTest
         .asJson();
 
         // reset database private state
-        deleteTodosOfCategoryById(response, 1);        
+        deleteTodosOfCategoryById(response, 1);
 
         assertEquals(response.getStatus(), STATUS_CODE_CREATED);
     }
@@ -523,7 +523,7 @@ public class TestCategories extends BaseTest
         .asJson();
 
         // reset database private state
-        deleteTodosOfCategoryById(response, 1);        
+        deleteTodosOfCategoryById(response, 1);
 
         assertEquals(response.getBody().getObject().getString("title"), "Test Title");
     }
@@ -556,7 +556,7 @@ public class TestCategories extends BaseTest
         .header("Content-Type", "application/xml")
         .body("<category><title>Test Title</title></category>")
         .asJson();
-        
+
         int id = response.getBody().getObject().getInt("id");
 
         response = Unirest.get("/categories/1/todos").asJson();
@@ -580,7 +580,7 @@ public class TestCategories extends BaseTest
     {
         assertGetStatusCode("/categories/1/projects", STATUS_CODE_OK);
     }
- 
+
     @Test
     public void testGetCategoryProjectsResponseSize()
     {
@@ -599,15 +599,32 @@ public class TestCategories extends BaseTest
     @Test
     public void testPostCategoryProjectsJSONStatusCode()
     {
+        //Check previous projects empty
+        HttpResponse<JsonNode> oldValue = Unirest.get("/categories/1")
+        .asJson();
+        assertEquals(oldValue.getStatus(), STATUS_CODE_OK);
+        assertEquals(oldValue.getBody().getObject().getJSONArray("categories")
+          .getJSONObject(0).getJSONArray("projects").size(), 0);
+
         HttpResponse<JsonNode> response = Unirest.post("/categories/1/projects")
         .header("Content-Type", "application/json")
         .body("{\n   \"title\":\"New Task\",\n   \"completed\":true,\n   \"description\":\"Testing\"\n}\n")
         .asJson();
 
+        assertEquals(response.getStatus(), STATUS_CODE_CREATED);
+        int newId = response.getBody().getObject().getInt("id");
+
+        HttpResponse<JsonNode> newValue = Unirest.get("/categories/1").asJson();
+        assertEquals(newValue.getStatus(), STATUS_CODE_OK);
+        JsonArray newProjects = newValue.getBody().getObject()
+        .getJSONArray("categories").getJSOnObject(0).getJSONArray("projects");
+
+        assertEquals(newProjects.size(), 1);
+        assertEquals(newProjects.getJSONObject(0).getInt("id"), newId);
+
         // reset database private state
         deleteProjectsOfCategoryById(response, 1);
 
-        assertEquals(response.getStatus(), STATUS_CODE_CREATED);
     }
 
     @Test
@@ -619,7 +636,7 @@ public class TestCategories extends BaseTest
         .asJson();
 
         // reset database private state
-        deleteProjectsOfCategoryById(response, 1);   
+        deleteProjectsOfCategoryById(response, 1);
 
         assertEquals(response.getBody().getObject().getString("title"), "New Task");
     }
@@ -647,9 +664,43 @@ public class TestCategories extends BaseTest
         .asJson();
 
         // reset database private state
-        deleteProjectsOfCategoryById(response, 1);   
+        deleteProjectsOfCategoryById(response, 1);
 
         assertEquals(response.getBody().getObject().getString("title"), "New Task");
+    }
+
+    //DELETE /categories/:id/projects/:id
+    @Test
+    public void testDeleteCategoryProjectsInvalidId() {
+      HttpResponse<JsonNode> response = Unirest.delete("/categories/1/projects/1")
+      .asJson();
+
+      assertEquals(response.getStatus(), STATUS_CODE_NOT_FOUND);
+      JsonArray errors = response.getBody().getObject.getJSONArray("errorMessages");
+      assertEquals(errors.size(), 1);
+      assertEquals(errors.getString(0),
+       "Could not find any instances with categories/1/projects/1");
+    }
+
+    @Test
+    public void testDeleteCategoryProjectsValidId() {
+      //create project association
+      HttpResponse<JsonNode> postResponse = Unirest.post("/categories/1/projects")
+      .header("Content-Type", "application/json")
+      .body("{\n   \"title\":\"New Task\",\n   \"completed\":true,\n   \"description\":\"Testing\"\n}\n")
+      .asJson();
+      int id = postResponse.getBody().getObject().getInt("id");
+
+      HttpResponse<JsonNode> deleteResponse =
+        Unirest.delete("/categories/1/projects/" + id).asJson();
+      assertEquals(deleteResponse.getStatus(), STATUS_CODE_OK);
+
+      //Make sure deletion did what it was supposed to
+      HttpResponse<JsonNode> currValue = Unirest.get("/categories/1")
+      .asJson();
+      assertEquals(currValue.getStatus(), STATUS_CODE_OK);
+      assertEquals(currValue.getBody().getObject().getJSONArray("categories")
+        .getJSONObject(0).getJSONArray("projects").size(), 0);
     }
 
 }
