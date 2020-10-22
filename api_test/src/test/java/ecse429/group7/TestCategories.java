@@ -2,9 +2,6 @@ package ecse429.group7;
 
 import ecse429.group7.BaseTest;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
-
 import kong.unirest.json.JSONArray;
 import org.junit.Test;
 import org.junit.BeforeClass;
@@ -12,6 +9,8 @@ import org.junit.BeforeClass;
 import kong.unirest.Unirest;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
+
+import static org.junit.Assert.*;
 
 
 public class TestCategories extends BaseTest
@@ -604,8 +603,8 @@ public class TestCategories extends BaseTest
         HttpResponse<JsonNode> oldValue = Unirest.get("/categories/1")
         .asJson();
         assertEquals(oldValue.getStatus(), STATUS_CODE_OK);
-        assertEquals(oldValue.getBody().getObject().getJSONArray("categories")
-          .getJSONObject(0).getJSONArray("projects").length(), 0);
+        assertFalse(oldValue.getBody().getObject().getJSONArray("categories")
+          .getJSONObject(0).has("projects"));
 
         HttpResponse<JsonNode> response = Unirest.post("/categories/1/projects")
         .header("Content-Type", "application/json")
@@ -700,8 +699,8 @@ public class TestCategories extends BaseTest
       HttpResponse<JsonNode> currValue = Unirest.get("/categories/1")
       .asJson();
       assertEquals(currValue.getStatus(), STATUS_CODE_OK);
-      assertEquals(currValue.getBody().getObject().getJSONArray("categories")
-        .getJSONObject(0).getJSONArray("projects").length(), 0);
+        assertFalse(currValue.getBody().getObject().getJSONArray("categories")
+                .getJSONObject(0).has("projects"));
     }
 
 }
