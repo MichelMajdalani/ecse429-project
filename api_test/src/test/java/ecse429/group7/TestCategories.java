@@ -5,6 +5,7 @@ import ecse429.group7.BaseTest;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
+import kong.unirest.json.JSONArray;
 import org.junit.Test;
 import org.junit.BeforeClass;
 
@@ -604,7 +605,7 @@ public class TestCategories extends BaseTest
         .asJson();
         assertEquals(oldValue.getStatus(), STATUS_CODE_OK);
         assertEquals(oldValue.getBody().getObject().getJSONArray("categories")
-          .getJSONObject(0).getJSONArray("projects").size(), 0);
+          .getJSONObject(0).getJSONArray("projects").length(), 0);
 
         HttpResponse<JsonNode> response = Unirest.post("/categories/1/projects")
         .header("Content-Type", "application/json")
@@ -616,10 +617,10 @@ public class TestCategories extends BaseTest
 
         HttpResponse<JsonNode> newValue = Unirest.get("/categories/1").asJson();
         assertEquals(newValue.getStatus(), STATUS_CODE_OK);
-        JsonArray newProjects = newValue.getBody().getObject()
-        .getJSONArray("categories").getJSOnObject(0).getJSONArray("projects");
+        JSONArray newProjects = newValue.getBody().getObject()
+        .getJSONArray("categories").getJSONObject(0).getJSONArray("projects");
 
-        assertEquals(newProjects.size(), 1);
+        assertEquals(newProjects.length(), 1);
         assertEquals(newProjects.getJSONObject(0).getInt("id"), newId);
 
         // reset database private state
@@ -676,8 +677,8 @@ public class TestCategories extends BaseTest
       .asJson();
 
       assertEquals(response.getStatus(), STATUS_CODE_NOT_FOUND);
-      JsonArray errors = response.getBody().getObject.getJSONArray("errorMessages");
-      assertEquals(errors.size(), 1);
+      JSONArray errors = response.getBody().getObject().getJSONArray("errorMessages");
+      assertEquals(errors.length(), 1);
       assertEquals(errors.getString(0),
        "Could not find any instances with categories/1/projects/1");
     }
@@ -700,7 +701,7 @@ public class TestCategories extends BaseTest
       .asJson();
       assertEquals(currValue.getStatus(), STATUS_CODE_OK);
       assertEquals(currValue.getBody().getObject().getJSONArray("categories")
-        .getJSONObject(0).getJSONArray("projects").size(), 0);
+        .getJSONObject(0).getJSONArray("projects").length(), 0);
     }
 
 }
