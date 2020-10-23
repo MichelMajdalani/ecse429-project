@@ -1,16 +1,11 @@
 package ecse429.group7;
 
-import ecse429.group7.BaseTest;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
+import kong.unirest.UnirestException;
 
 import org.junit.Test;
 import org.junit.After;
 
 import kong.unirest.Unirest;
-import kong.unirest.HttpResponse;
-import kong.unirest.JsonNode;
 
 public class TestShutdown extends BaseTest {
         @After
@@ -20,21 +15,16 @@ public class TestShutdown extends BaseTest {
         }
 
         // GET /shutdown
-        @Test
-        public void testGetShutdownStatusCode()
-        {
-            assertGetStatusCode("/shutdown", STATUS_CODE_OK);
+        @Test(expected= UnirestException.class)
+        public void testGetShutdownServerDisabled() {
+            try {
+                Unirest.get("/shutdown").asJson();
+            } catch (Exception ignored) {}
+            Unirest.get("/todos").asJson();
         }
 
         @Test
-        public void testGetShutdownServerDisabled()
-        {
-            try
-            {
-                HttpResponse<JsonNode> response = Unirest.get("/shutdown").asJson();
-            } catch(kong.unirest.UnirestException e)
-            {
-                System.out.println(e);
-            }
+        public void putRequestToShutdownYields404() {
+            assertPostStatusCode("/shutdown", STATUS_CODE_NOT_FOUND);
         }
 }
