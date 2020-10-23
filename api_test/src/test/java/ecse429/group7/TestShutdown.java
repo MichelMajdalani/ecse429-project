@@ -11,6 +11,7 @@ public class TestShutdown extends BaseTest {
         @After
         public void restartServerAfterShutdown()
         {
+            System.out.println("Restarting server");
             startServer();
         }
 
@@ -21,10 +22,5 @@ public class TestShutdown extends BaseTest {
                 Unirest.get("/shutdown").asJson();
             } catch (Exception ignored) {}
             Unirest.get("/todos").asJson();
-        }
-
-        @Test
-        public void putRequestToShutdownYields404() {
-            assertPostStatusCode("/shutdown", STATUS_CODE_NOT_FOUND);
         }
 }

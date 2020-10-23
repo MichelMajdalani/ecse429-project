@@ -53,12 +53,6 @@ public class BaseTest
         assertEquals(response.getStatus(), status_code);
     }
 
-    public static void assertPostStatusCode(String url, int status_code)
-    {
-        HttpResponse<JsonNode> response = Unirest.post(url).asJson();
-        assertEquals(response.getStatus(), status_code);
-    }
-
     public static void assertHeadStatusCode(String url, int status_code)
     {
         HttpResponse<JsonNode> response = Unirest.head(url).asJson();
