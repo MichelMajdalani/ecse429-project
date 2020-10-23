@@ -6,8 +6,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-import org.junit.BeforeClass;
-
 import kong.unirest.Unirest;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
