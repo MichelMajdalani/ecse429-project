@@ -438,6 +438,24 @@ public class TestCategories extends BaseTest {
     }
 
     @Test
+    public void testPostCategoryCategoriesJSONInavlidCompletionStatusCode() {
+        HttpResponse<JsonNode> response = Unirest.post("/categories/1/todos").header("Content-Type", "application/json")
+                .body("{\n    \"title\":\"\"}").asJson();
+
+        assertEquals(response.getStatus(), STATUS_CODE_BAD_REQUEST);
+    }
+
+    @Test
+    public void testPostCategoryCategoriesJSONInvalidCompletionErrorMessage() {
+        HttpResponse<JsonNode> response = Unirest.post("/categories/1/todos").header("Content-Type", "application/json")
+                .body("{\n    \"title\":\"\"}").asJson();
+
+        assertEquals(response.getBody().getObject().getJSONArray("errorMessages").getString(0),
+                "Failed Validation: title : can not be empty");
+
+    }
+
+    @Test
     public void testPostCategoryCategoriesJSONMalformedStatusCode() {
         HttpResponse<JsonNode> response = Unirest.post("/categories/1/todos").header("Content-Type", "application/json")
                 .body("{\n    \"title\":\"Test Title}").asJson();
@@ -477,12 +495,40 @@ public class TestCategories extends BaseTest {
     }
 
     @Test
+    public void testPostCategoryCategoriesXMLInvalidCompletionStatusCode() {
+        HttpResponse<JsonNode> response = Unirest.post("/categories/1/todos").header("Content-Type", "application/xml")
+                .body("<category><title></title></category>").asJson();
+
+        assertEquals(response.getStatus(), STATUS_CODE_BAD_REQUEST);
+
+    }
+
+    @Test
+    public void testPostCategoryCategoriesXMLInvalidCompletionErrorMessage() {
+        HttpResponse<JsonNode> response = Unirest.post("/categories/1/todos").header("Content-Type", "application/xml")
+                .body("<category><title></title></category>").asJson();
+
+        assertEquals(response.getBody().getObject().getJSONArray("errorMessages").getString(0),
+                "Failed Validation: title : can not be empty");
+
+    }
+
+    @Test
     public void testPostCategoryCategoriesXMLMalformedStatusCode() {
         HttpResponse<JsonNode> response = Unirest.post("/categories/1/todos").header("Content-Type", "application/xml")
                 .body("<category><title>Test Title</title><category>").asJson();
 
         assertEquals(response.getStatus(), STATUS_CODE_BAD_REQUEST);
 
+    }
+
+    @Test
+    public void testPostCategoryCategoriesXMLMalformedErrorMessage() {
+        HttpResponse<JsonNode> response = Unirest.post("/categories/1/todos").header("Content-Type", "application/xml")
+                .body("<category><title>Test Title</title><category>").asJson();
+
+        assertEquals(response.getBody().getObject().getJSONArray("errorMessages").getString(0),
+                "Unclosed tag category at 46 [character 47 line 1]");
     }
 
     // DELETE /categories/:id/todos/:id
@@ -500,6 +546,23 @@ public class TestCategories extends BaseTest {
         Unirest.delete("/todos/" + String.valueOf(id)).asJson();
 
         assertEquals(response.getStatus(), STATUS_CODE_OK);
+    }
+
+    @Test
+    public void testDeleteTwiceCategoryCategoriesStatusCode() {
+        // create project category to delete
+        HttpResponse<JsonNode> response = Unirest.post("/categories/1/todos").header("Content-Type", "application/xml")
+                .body("<category><title>Test Title</title></category>").asJson();
+        int id = response.getBody().getObject().getInt("id");
+        Unirest.delete("/categories/1/todos/" + String.valueOf(id)).header("Content-Type", "application/json").asJson();
+
+        response = Unirest.delete("/categories/1/todos/" + String.valueOf(id))
+                .header("Content-Type", "application/json").asJson();
+
+        // Must also delete todos
+        Unirest.delete("/todos/" + String.valueOf(id)).asJson();
+
+        assertEquals(response.getStatus(), STATUS_CODE_NOT_FOUND);
     }
 
     @Test
