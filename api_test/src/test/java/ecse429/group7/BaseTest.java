@@ -7,6 +7,11 @@ import kong.unirest.Unirest;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
 
 public class BaseTest 
 {
@@ -22,6 +27,24 @@ public class BaseTest
     public static void setupForAllTests()
     {
         Unirest.config().defaultBaseUrl(BASE_URL);
+        startServer();
+    }
+
+    public static void startServer() {
+        try {
+            final Runtime re = Runtime.getRuntime();
+            ProcessBuilder pb = new ProcessBuilder("java", "-jar", "../runTodoManagerRestAPI-1.5.5.jar");
+            Process ps = pb.start();
+            final InputStream is = ps.getInputStream();
+            final BufferedReader output = new BufferedReader(new InputStreamReader(is));
+            while (true) {
+                String line = output.readLine();
+                if (line!=null && line.contains("Running on 4567"))
+                    return;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static void assertGetStatusCode(String url, int status_code)
