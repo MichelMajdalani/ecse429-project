@@ -120,6 +120,14 @@ public class BaseTest {
         return null;
     }
 
+    public static JSONArray getProjectTasks(String projectName) {
+        JSONObject proj = findProjectByName(projectName);
+        if (proj == null) return null;
+        int id = proj.getInt("id");
+        return Unirest.get("/projects/" + id + "/tasks")
+                .asJson().getBody().getObject().getJSONArray("todos");
+    }
+
     public static int findIdFromTodoName(String todo_name) {
         JSONObject todo = findTodoByName(todo_name);
         if (todo == null) return -1;

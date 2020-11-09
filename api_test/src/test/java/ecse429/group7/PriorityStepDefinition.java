@@ -15,11 +15,11 @@ import kong.unirest.JsonNode;
 import kong.unirest.json.JSONArray;
 import kong.unirest.json.JSONObject;
 
-import javax.xml.crypto.Data;
-
 import static org.junit.Assert.*;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class PriorityStepDefinition extends BaseTest {
 
@@ -27,6 +27,7 @@ public class PriorityStepDefinition extends BaseTest {
     JSONObject originalValue;
     JSONObject response;
     JSONObject originalTodoList;
+    JSONArray incompleteTasks;
 
     @Before
     public void initVars() {
@@ -36,6 +37,7 @@ public class PriorityStepDefinition extends BaseTest {
         response = null;
         originalValue = null;
         originalTodoList = null;
+        incompleteTasks = null;
     }
 
     @After
@@ -141,27 +143,27 @@ public class PriorityStepDefinition extends BaseTest {
         assertTrue(todo.getString("doneStatus").equalsIgnoreCase(val + ""));
     }
 
-    @Given("^([^>]*) is the title of a todo registered on the system$")
+    @Given("^(.*) is the title of a todo registered on the system$")
     public void selectedTitleIsTheTitleOfATodoRegisteredOnTheSystem(String selectedTitle) {
         assertNotNull(findTodoByName(selectedTitle));
     }
 
-    @Given("^([^>]*) is not a title of a todo registered on the system$")
+    @Given("^(.*) is not a title of a todo registered on the system$")
     public void selectedTitleIsNotTheTitleOfATodoRegisteredOnTheSystem(String selectedTitle) {
         assertNull(findTodoByName(selectedTitle));
     }
 
-    @And("^the todo with title ([^>]*) is not marked as done$")
+    @And("^the todo with title (.*) is not marked as done$")
     public void theTodoWithTitleSelectedTitleIsNotMarkedAsDone(String selectedTitle) {
         assertDoneStatusEquals(findTodoByName(selectedTitle), false);
     }
 
-    @And("^the todo with title ([^>]*) is marked as done$")
+    @And("^the todo with title (.*) is marked as done$")
     public void theTodoWithTitleSelectedTitleIsMarkedAsDone(String selectedTitle) {
         assertDoneStatusEquals(findTodoByName(selectedTitle), true);
     }
 
-    @When("^the user chooses to mark the task named ([^>]*) as done$")
+    @When("^the user chooses to mark the task named (.*) as done$")
     public void theTheUserChoosesToMarkTheTaskNamedSelectedTitleAsDone(String selectedTitle) {
         originalTodoList = Unirest.get("/todos").asJson().getBody().getObject();
         JSONObject todo = findTodoByName(selectedTitle);
@@ -176,7 +178,7 @@ public class PriorityStepDefinition extends BaseTest {
         response = Unirest.post("/todos/" + id).body(todo).asJson().getBody().getObject();
     }
 
-    @Then("^the todo with title ([^>]*) will be marked as done on the system$")
+    @Then("^the todo with title (.*) will be marked as done on the system$")
     public void theTodoWithTitleSelectedTitleWillBeMarkedAsDoneOnTheSystem(String selectedTitle) {
         assertDoneStatusEquals(findTodoByName(selectedTitle), true);
     }
@@ -243,9 +245,105 @@ public class PriorityStepDefinition extends BaseTest {
 
     @And("no todos are associated with {string}")
     public void noTodosAreAssociatedWithFACC(String className) {
-        int projId = findProjectByName(className).getInt("id");
-        JSONArray response = Unirest.get("/projects/" + projId + "/tasks")
-                .asJson().getBody().getObject().getJSONArray("todos");
-        assertEquals(response.length(), 0);
+        assertEquals(getProjectTasks(className).length(), 0);
+    }
+
+    @Given("^(.*) is the title of a class on the system$")
+    public void projectTitleIsTheTitleOfAClassOnTheSystem(String projectTitle) {
+        assertNotNull(findProjectByName(projectTitle));
+    }
+
+    @Given("^(.*) is not a title of a class on the system$")
+    public void projectTitleIsNotATitleOfAClassOnTheSystem(String projectTitle) {
+        assertNull(findProjectByName(projectTitle));
+    }
+
+    @And("^the class with title (.*) has outstanding tasks$")
+    public void theClassWithTitleProjectTitleHasOutstandingTasks(String projectTitle) {
+        JSONArray projects = getProjectTasks(projectTitle);
+        for (Object o : projects) {
+            int id = ((JSONObject)o).getInt("id");
+            JSONObject todo = (JSONObject) Unirest.get("/todos/" + id)
+                    .asJson().getBody().getObject()
+                    .getJSONArray("todos").get(0);
+            if (todo.getString("doneStatus").equalsIgnoreCase("false")) {
+                return;
+            }
+        }
+        fail();
+    }
+
+    @And("^the class with title (.*) has no outstanding tasks$")
+    public void theClassWithTitleProjectTitleHasNoOutstandingTasks(String projectTitle) {
+        JSONArray tasks = getProjectTasks(projectTitle);
+        for (Object o : tasks) {
+            int id = ((JSONObject)o).getInt("id");
+            JSONObject todo = (JSONObject) Unirest.get("/todos/" + id)
+                    .asJson().getBody().getObject()
+                    .getJSONArray("todos").get(0);
+            if (todo.getString("doneStatus").equalsIgnoreCase("false")) {
+                fail();
+            }
+        }
+    }
+
+    @And("^the class with title (.*) has no tasks$")
+    public void theClassWithTitleProjectTitleHasNoTasks(String projectTitle) {
+        JSONArray tasks = getProjectTasks(projectTitle);
+        assertEquals(tasks.length(), 0);
+    }
+
+    @When("^the user requests the incomplete tasks for the course with title (.*)$")
+    public void theUserRequestsTheIncompleteTasksForTheCourseWithTitleProjectTitle(String projectTitle) {
+        incompleteTasks = new JSONArray();
+        JSONArray tasks = getProjectTasks(projectTitle);
+        if (tasks == null) {
+            response = Unirest.get("/projects/-1/tasks")
+                    .asJson().getBody().getObject();
+            return;
+        }
+        for (Object o : tasks) {
+            int id = ((JSONObject)o).getInt("id");
+            JSONObject todo = (JSONObject) Unirest.get("/todos/" + id)
+                    .asJson().getBody().getObject()
+                    .getJSONArray("todos").get(0);
+            if (todo.getString("doneStatus").equalsIgnoreCase("false")) {
+                incompleteTasks.put(todo);
+            }
+        }
+    }
+
+    @Then("^(.*) todos will be returned$")
+    public void nTodosWillBeReturned(int n) {
+        assertEquals(n, incompleteTasks.length());
+    }
+
+    @And("^each todo returned will be marked as done$")
+    public void eachTodoReturnedWillBeMarkedAsDone() {
+        for (Object o : incompleteTasks) {
+            JSONObject todo = (JSONObject) o;
+            assertDoneStatusEquals(todo, false);
+        }
+    }
+
+    @And("^each todo returned will be a task of the class with title (.*)$")
+    public void eachTodoReturnedWillBeATaskOfTheClassWithTitleProjectTitle(String projectTitle) {
+        JSONArray tasks = getProjectTasks(projectTitle);
+        Set<Integer> taskIDs = new HashSet<>();
+        for (Object o : tasks) {
+            JSONObject task = (JSONObject) o;
+            taskIDs.add(task.getInt("id"));
+        }
+
+        for (Object o : incompleteTasks) {
+            JSONObject todo = (JSONObject) o;
+            assertTrue(taskIDs.contains(todo.getInt("id")));
+        }
+    }
+
+    @And("the user will receive an error telling them that the course doesn't exist on the system")
+    public void theUserWillReceiveAnErrorTellingThemThatTheTaskDoesntExistOnTheSystem() {
+        System.out.println(response.toString());
+        //TODO: Handle the fact that this behavior has bugs
     }
 }
