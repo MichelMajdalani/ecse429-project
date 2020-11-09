@@ -346,4 +346,26 @@ public class PriorityStepDefinition extends BaseTest {
         System.out.println(response.toString());
         //TODO: Handle the fact that this behavior has bugs
     }
+
+    @When("^the user requests to set the description of the todo with title \"([^\"]*)\" to \"([^\"]*)\"$")
+    public void theUserRequestsToSetTheDescriptionOfTheTodoWithTitleSelectedTitleToNewDescription(
+            String selectedTitle, String newDescription) {
+        JSONObject todo = findTodoByName(selectedTitle);
+        originalValue = new JSONObject(todo.toString());
+        int id = todo.getInt("id");
+        todo.remove("id");
+        todo.put("description", newDescription);
+        todo.put("doneStatus", todo.getString("doneStatus").equalsIgnoreCase("true"));
+        response = Unirest.put("/todos/" + id).body(todo).asJson().getBody().getObject();
+    }
+
+    @Then("^the description of the todo with title \"([^\"]*)\" will be changed to \"([^\"]*)\"$")
+    public void theDescriptionOfTheTodoWillBeChangedToNewDescription(String selectedTitle, String newDescription) {
+        assertEquals(findTodoByName(selectedTitle).getString("description"), newDescription);
+    }
+
+    @And("^the user will be given the updated version of the todo where the description is (.*)$")
+    public void theUserWillBeGivenTheUpdatedVersionOfTheTodoWhereTheDescriptionIsNewDescription(String newDescription) {
+        assertEquals(response.getString("description"), newDescription);
+    }
 }
