@@ -108,15 +108,7 @@ public class PriorityStepDefinition extends BaseTest {
     public static void before()
     {
         Unirest.config().defaultBaseUrl(BASE_URL);
-        while(!startServer());
-        try{
-
-            Thread.sleep(500);
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
+        startServer();
     }
 
     @After
