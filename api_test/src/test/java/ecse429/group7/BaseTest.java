@@ -12,7 +12,6 @@ import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
@@ -32,16 +31,7 @@ public class BaseTest
     public static void setupForAllTests()
     {
         Unirest.config().defaultBaseUrl(BASE_URL);
-
         startServer();
-        try{
-
-            Thread.sleep(500);
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
     }
 
     @AfterClass
@@ -130,7 +120,7 @@ public class BaseTest
             if(response.getBody().getObject().getJSONArray("todos").getJSONObject(i).getString("title").equals(todo_name))
             {
                 int todo_id = response.getBody().getObject().getJSONArray("todos").getJSONObject(i).getInt("id");
-                HttpResponse<JsonNode> response_cat = Unirest.get("/todos/" + String.valueOf(todo_id) + "/categories").asJson();
+                HttpResponse<JsonNode> response_cat = Unirest.get("/todos/" + todo_id + "/categories").asJson();
                 System.out.println(todo_id + " " + response_cat.getBody().toString());
 
                 for(int j = 0; j < response_cat.getBody().getObject().getJSONArray("categories").length(); j++)

@@ -17,23 +17,23 @@ public class TestTodos extends BaseTest
     public void deleteTodoById(HttpResponse<JsonNode> response)
     {
         int id = response.getBody().getObject().getInt("id");
-        Unirest.delete("/todos/" + String.valueOf(id)).asJson();
+        Unirest.delete("/todos/" + id).asJson();
     }
 
     // Delete project to reset state of database (must delete both association and new object)
     public void deleteTodoTasksOfById(HttpResponse<JsonNode> response, int id)
     {
         int created_id = response.getBody().getObject().getInt("id");
-        Unirest.delete("/todos/" + String.valueOf(id) + "/tasksof/" + String.valueOf(created_id)).asJson();
-        Unirest.delete("/projects/" + String.valueOf(created_id)).asJson();
+        Unirest.delete("/todos/" + id + "/tasksof/" + created_id).asJson();
+        Unirest.delete("/projects/" + created_id).asJson();
     }
 
     // Delete category to reset state of database (must delete both association and new object)
     public void deleteCategoryOfById(HttpResponse<JsonNode> response, int id)
     {
         int created_id = response.getBody().getObject().getInt("id");
-        Unirest.delete("/todos/" + String.valueOf(id) + "/categories/" + String.valueOf(created_id)).asJson();
-        Unirest.delete("/categories/" + String.valueOf(created_id)).asJson();
+        Unirest.delete("/todos/" + id + "/categories/" + created_id).asJson();
+        Unirest.delete("/categories/" + created_id).asJson();
     }
 
     // GET /todos
@@ -114,8 +114,8 @@ public class TestTodos extends BaseTest
     }
 
     // POST /todos
-    public  void testPostTodosInvalidStatusCode()
-    {
+    @Test
+    public  void testPostTodosInvalidStatusCode() {
         HttpResponse<JsonNode> response = Unirest.post("/todos").asJson();
         assertEquals(response.getStatus(), STATUS_CODE_BAD_REQUEST);
     }
@@ -413,7 +413,7 @@ public class TestTodos extends BaseTest
         
         int id = response.getBody().getObject().getInt("id");
 
-        response = Unirest.delete("/todos/" + String.valueOf(id)).header("Content-Type", "application/json")
+        response = Unirest.delete("/todos/" + id).header("Content-Type", "application/json")
         .asJson();
 
         assertEquals(response.getStatus(), STATUS_CODE_OK);
@@ -433,8 +433,7 @@ public class TestTodos extends BaseTest
         response = Unirest.get("/todos").asJson();
         int original_size = response.getBody().getObject().getJSONArray("todos").length();
 
-        response = Unirest.delete("/todos/" + String.valueOf(id)).header("Content-Type", "application/json")
-        .asJson();
+        Unirest.delete("/todos/" + id).header("Content-Type", "application/json").asJson();
 
         response = Unirest.get("/todos").asJson();
         int new_size = response.getBody().getObject().getJSONArray("todos").length();
@@ -560,11 +559,11 @@ public class TestTodos extends BaseTest
         
         int id = response.getBody().getObject().getInt("id");
 
-        response = Unirest.delete("/todos/1/tasksof/" + String.valueOf(id)).header("Content-Type", "application/json")
+        response = Unirest.delete("/todos/1/tasksof/" + id).header("Content-Type", "application/json")
         .asJson();
 
         // Must also delete project
-        Unirest.delete("/projects/" + String.valueOf(id)).asJson();
+        Unirest.delete("/projects/" + id).asJson();
 
         assertEquals(response.getStatus(), STATUS_CODE_OK);
     }
@@ -580,11 +579,10 @@ public class TestTodos extends BaseTest
         response = Unirest.get("/todos/1/tasksof").asJson();
         int original_size = response.getBody().getObject().getJSONArray("projects").length();
 
-        response = Unirest.delete("/todos/1/tasksof/" + String.valueOf(id)).header("Content-Type", "application/json")
-        .asJson();
+        Unirest.delete("/todos/1/tasksof/" + id).header("Content-Type", "application/json").asJson();
 
         // Must also delete project
-        Unirest.delete("/projects/" + String.valueOf(id)).asJson();
+        Unirest.delete("/projects/" + id).asJson();
 
         response = Unirest.get("/todos/1/tasksof").asJson();
         int new_size = response.getBody().getObject().getJSONArray("projects").length();
@@ -716,11 +714,11 @@ public class TestTodos extends BaseTest
                 
         int id = response.getBody().getObject().getInt("id");
 
-        response = Unirest.delete("/todos/1/categories/" + String.valueOf(id)).header("Content-Type", "application/json")
+        response = Unirest.delete("/todos/1/categories/" + id).header("Content-Type", "application/json")
         .asJson();
 
         // Must also delete category
-        Unirest.delete("/categories/" + String.valueOf(id)).asJson();
+        Unirest.delete("/categories/" + id).asJson();
 
         assertEquals(response.getStatus(), STATUS_CODE_OK);
     }
@@ -737,11 +735,10 @@ public class TestTodos extends BaseTest
         response = Unirest.get("/todos/1/categories").asJson();
         int original_size = response.getBody().getObject().getJSONArray("categories").length();
 
-        response = Unirest.delete("/todos/1/categories/" + String.valueOf(id)).header("Content-Type", "application/json")
-        .asJson();
+        Unirest.delete("/todos/1/categories/" + id).header("Content-Type", "application/json").asJson();
 
         // Must also delete category
-        Unirest.delete("/categories/" + String.valueOf(id)).asJson();
+        Unirest.delete("/categories/" + id).asJson();
 
         response = Unirest.get("/todos/1/categories").asJson();
         int new_size = response.getBody().getObject().getJSONArray("categories").length();
