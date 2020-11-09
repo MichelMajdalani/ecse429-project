@@ -350,7 +350,12 @@ public class PriorityStepDefinition extends BaseTest {
     @When("^the user requests to set the description of the todo with title \"([^\"]*)\" to \"([^\"]*)\"$")
     public void theUserRequestsToSetTheDescriptionOfTheTodoWithTitleSelectedTitleToNewDescription(
             String selectedTitle, String newDescription) {
+        originalTodoList = Unirest.get("/todos").asJson().getBody().getObject();
         JSONObject todo = findTodoByName(selectedTitle);
+        if (todo == null) {
+            response = Unirest.post("/todos/-1").asJson().getBody().getObject();
+            return;
+        }
         originalValue = new JSONObject(todo.toString());
         int id = todo.getInt("id");
         todo.remove("id");
@@ -367,5 +372,28 @@ public class PriorityStepDefinition extends BaseTest {
     @And("^the user will be given the updated version of the todo where the description is (.*)$")
     public void theUserWillBeGivenTheUpdatedVersionOfTheTodoWhereTheDescriptionIsNewDescription(String newDescription) {
         assertEquals(response.getString("description"), newDescription);
+    }
+
+    @When("^the user requests to remove the description of the todo with title (.*)$")
+    public void theUserRequestsToRemoveTheDescriptionOfTheTodoWithTitleSelectedTitle(String selectedTitle) {
+        theUserRequestsToSetTheDescriptionOfTheTodoWithTitleSelectedTitleToNewDescription(selectedTitle, null);
+    }
+
+    @Then("^the description of the todo with title (.*) will be removed$")
+    public void theDescriptionOfTheTodoWillBeRemoved(String selectedTitle) {
+        assertEquals(findTodoByName(selectedTitle).getString("description"), "");
+    }
+
+    @And("the user will be given the update version of the todo with an empty description")
+    public void theUserWillBeGivenTheUpdateVersionOfTheTodoWithAnEmptyDescription() {
+        assertEquals(response.getString("description"), "");
+    }
+
+    @When("^the user requests to change the description of the todo with title (.*)$")
+    public void theUserRequestsToChangeTheDescriptionOfTheTodoWithTitleSelectedTitle(String selectedTitle) {
+        theUserRequestsToSetTheDescriptionOfTheTodoWithTitleSelectedTitleToNewDescription(
+                selectedTitle,
+                "Default new value (doesn't matter)"
+        );
     }
 }

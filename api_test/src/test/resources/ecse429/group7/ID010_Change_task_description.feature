@@ -22,26 +22,26 @@ to better represent the work to do.
       | Complete chem homework | Finish quiz                                |
       | 56 (Weird name)!       | This to do exists to test different titles |
 
-#  Scenario Outline: Remove description from existing todo (Alternate Flow)
-#    Given <selectedTitle> is the title of a todo registered on the system
-#     When the user requests to remove the description of the todo with title <selectedTitle>
-#     Then the description of the todo will be removed
-#      And the user will be given the update version of the todo with an empty description
-#    Examples:
-#      | selectedTitle          |
-#      | Finish feature files   |
-#      | Complete chem homework |
-#      | 56 (Weird name)!       |
-#
-#  Scenario Outline: Change description for non-existent todo (Error Flow)
-#    Given <selectedTitle> is not the title of a todo registered on the system
-#     When the user requests to change the description of the todo with title <selectedTitle>
-#     Then no todo will be updated
-#      And the user will be given an error explaining that the todo doesn't exist
-#    Examples:
-#      | selectedTitle        |
-#      | Fake title!          |
-#      |                      |
-#      | finish feature files |
-#
-#
+  Scenario Outline: Remove description from existing todo (Alternate Flow)
+    Given <selectedTitle> is the title of a todo registered on the system
+     When the user requests to remove the description of the todo with title <selectedTitle>
+     Then the description of the todo with title <selectedTitle> will be removed
+      And the user will be given the update version of the todo with an empty description
+    Examples:
+      | selectedTitle          |
+      | Finish feature files   |
+      | Complete chem homework |
+      | 56 (Weird name)!       |
+
+  Scenario Outline: Change description for non-existent todo (Error Flow)
+    Given <selectedTitle> is not a title of a todo registered on the system
+     When the user requests to change the description of the todo with title <selectedTitle>
+     Then no todo on the system will be modified
+      And the user will receive an error message that the specified todo does not exist
+    Examples:
+      | selectedTitle        |
+      | Fake title!          |
+      |                      |
+      | finish feature files |
+
+
