@@ -12,6 +12,7 @@ import io.cucumber.datatable.DataTable;
 import kong.unirest.Unirest;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
+import kong.unirest.json.JSONObject;
 
 import static org.junit.Assert.*;
 
@@ -20,6 +21,7 @@ import java.util.List;
 public class PriorityStepDefinition extends BaseTest {
 
     String errorMessage;
+    JSONObject response;
 
     @Before
     public static void before() {
@@ -27,13 +29,21 @@ public class PriorityStepDefinition extends BaseTest {
         startServer();
     }
 
+    @Before
+    public void initVars() {
+        errorMessage = "";
+        response = null;
+    }
+
+    @Before
+
     @After
     public static void after() {
         stopServer();
     }
 
     @Given("^the following categories are registered in the todoManagerRestAPI system:$")
-    public void the_following_categories_are_registered_in_the_todomanagerrestapi_system(DataTable table) {
+    public void the_following_categories_are_registered_in_the_todo_manager_restapi_system(DataTable table) {
         List<List<String>> rows = table.asLists(String.class);
     
         boolean firstLine = true;
@@ -113,12 +123,12 @@ public class PriorityStepDefinition extends BaseTest {
         user_requests_to_categorize_todo_with_title_something_as_something_priority(todo_title, priority);
     }
 
-    @Given("the API server is running")
+    @Given("^the API server is running$")
     public void theAPIServerIsRunning() {
         waitUntilOnline();
     }
 
-    @And("the following todos registered in the system")
+    @And("^the following todos registered in the system$")
     public void theFollowingTodosRegisteredInTheSystem(DataTable table) {
         List<List<String>> rows = table.asLists(String.class);
 
@@ -127,13 +137,46 @@ public class PriorityStepDefinition extends BaseTest {
             // ignore title row
             if(!firstLine) {
                 String title = "\"title\":\"" + columns.get(0) + "\"";
-                String doneStatus = "\"doneStatus\":\"" + columns.get(1).equalsIgnoreCase("TRUE") + "\"";
-                String description = "\"doneStatus\":\"" + columns.get(2) + "\"";
+                String doneStatus = "\"doneStatus\":" + columns.get(1);
+                String description = "\"description\":\"" + columns.get(2) + "\"";
                 Unirest.post("/todos")
                         .body("{\n" + title + ",\n" + doneStatus + ",\n" + description + "\n}")
                         .asJson();
             }
             firstLine = false;
         }
+    }
+
+    public static void assertDoneStatusEquals(JSONObject todo, boolean val) {
+        assertTrue(todo.getString("doneStatus").equalsIgnoreCase(val + ""));
+    }
+
+    @Given("^([^>]*) is the title of a todo registered on the system$")
+    public void selectedTitleIsTheTitleOfATodoRegisteredOnTheSystem(String selectedTitle) {
+        assertNotNull(findTodoByName(selectedTitle));
+    }
+
+    @And("^the event with title ([^>]*) is not marked as done$")
+    public void theEventWithTitleSelectedTitleIsNotMarkedAsDone(String selectedTitle) {
+        assertDoneStatusEquals(findTodoByName(selectedTitle), false);
+    }
+
+    @When("^the the user chooses to mark the task named ([^>]*) as done$")
+    public void theTheUserChoosesToMarkTheTaskNamedSelectedTitleAsDone(String selectedTitle) {
+        JSONObject todo = findTodoByName(selectedTitle);
+        int id = todo.getInt("id");
+        todo.remove("id");
+        todo.put("doneStatus", true);
+        response = Unirest.post("/todos/" + id).body(todo).asJson().getBody().getObject();
+    }
+
+    @Then("^the todo with title ([^>]*) will be marked as done on the system$")
+    public void theTodoWithTitleSelectedTitleWillBeMarkedAsDoneOnTheSystem(String selectedTitle) {
+        assertDoneStatusEquals(findTodoByName(selectedTitle), true);
+    }
+
+    @And("^the updated todo will be returned to the user and marked as done$")
+    public void theUpdatedTodoWillBeReturnedToTheUserAndMarkedAsDone() {
+        assertDoneStatusEquals(response, true);
     }
 }

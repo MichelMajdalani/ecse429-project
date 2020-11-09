@@ -99,19 +99,20 @@ public class BaseTest {
         assertEquals(response.getBody().getObject().getJSONArray("errorMessages").getString(index), expected_message);
     }
 
-    public static int findIdFromTodoName(String todo_name) {
+    public static JSONObject findTodoByName(String todo_name) {
         JSONObject response = Unirest.get("/todos").asJson().getBody().getObject();
-        int id = -1;
-
         for (Object todo : response.getJSONArray("todos")) {
             JSONObject t = (JSONObject) todo;
-            if (t.getString("title").equals(todo_name)) {
-                id = t.getInt("id");
-                break;
-            }
+            if (t.getString("title").equals(todo_name))
+                return t;
         }
+        return null;
+    }
 
-        return id;
+    public static int findIdFromTodoName(String todo_name) {
+        JSONObject todo = findTodoByName(todo_name);
+        if (todo == null) return -1;
+        return todo.getInt("id");
     }
 
     public static int findIdFromTodoCategoryName(String category_name, String todo_name) {
