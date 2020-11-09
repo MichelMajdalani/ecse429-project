@@ -10,10 +10,11 @@ so I can track my accomplishments.
       | Finish feature files   | false      | Create 3 feature files (including this one)          |
       | Complete chem homework | true       | Need to write up a lab and finish challenge question |
       | 56 (Weird name)!       | false      | This todo exists to try different titles             |
+      | x                      | true       | This todo also exists to try different titles        |
 
   Scenario Outline: Mark non completed todo as completed (Normal Flow)
     Given <selectedTitle> is the title of a todo registered on the system
-      And the event with title <selectedTitle> is not marked as done
+      And the todo with title <selectedTitle> is not marked as done
      When the the user chooses to mark the task named <selectedTitle> as done
      Then the todo with title <selectedTitle> will be marked as done on the system
       And the updated todo will be returned to the user and marked as done
@@ -22,14 +23,16 @@ so I can track my accomplishments.
       | Finish feature files |
       | 56 (Weird name)!     |
 
-#  Scenario: Mark already completed todo as completed (Alternate Flow)
-#    Given <selectedTitle> is the title of a todo registered on the system
-#      And the todo with title <selectedTitle> is marked as done
-#     When the the user choses to mark the todo named <selectedTitle> as done
-#     Then the todo will not be modified
-#      And the todo will be returned to the user
-#      | selectedTitle          | doneStatus |
-#      | Complete chem homework | true       |
+  Scenario Outline: Mark already completed todo as completed (Alternate Flow)
+    Given <selectedTitle> is the title of a todo registered on the system
+      And the todo with title <selectedTitle> is marked as done
+     When the the user chooses to mark the task named <selectedTitle> as done
+     Then the todo with title <selectedTitle> will not be modified
+      And the todo will be returned to the user
+    Examples:
+      | selectedTitle          |
+      | Complete chem homework |
+      | x                      |
 #
 #  Scenario: Mark non-existant todo as completed (Error flow)
 #    Given <selectedTitle> is not a title of a todo registered on the system

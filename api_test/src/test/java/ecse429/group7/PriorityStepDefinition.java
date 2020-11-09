@@ -21,6 +21,7 @@ import java.util.List;
 public class PriorityStepDefinition extends BaseTest {
 
     String errorMessage;
+    JSONObject originalValue;
     JSONObject response;
 
     @Before
@@ -33,6 +34,7 @@ public class PriorityStepDefinition extends BaseTest {
     public void initVars() {
         errorMessage = "";
         response = null;
+        originalValue = null;
     }
 
     @Before
@@ -156,14 +158,20 @@ public class PriorityStepDefinition extends BaseTest {
         assertNotNull(findTodoByName(selectedTitle));
     }
 
-    @And("^the event with title ([^>]*) is not marked as done$")
-    public void theEventWithTitleSelectedTitleIsNotMarkedAsDone(String selectedTitle) {
+    @And("^the todo with title ([^>]*) is not marked as done$")
+    public void theTodoWithTitleSelectedTitleIsNotMarkedAsDone(String selectedTitle) {
         assertDoneStatusEquals(findTodoByName(selectedTitle), false);
+    }
+
+    @And("^the todo with title ([^>]*) is marked as done$")
+    public void theTodoWithTitleSelectedTitleIsMarkedAsDone(String selectedTitle) {
+        assertDoneStatusEquals(findTodoByName(selectedTitle), true);
     }
 
     @When("^the the user chooses to mark the task named ([^>]*) as done$")
     public void theTheUserChoosesToMarkTheTaskNamedSelectedTitleAsDone(String selectedTitle) {
         JSONObject todo = findTodoByName(selectedTitle);
+        originalValue = new JSONObject(todo.toString());
         int id = todo.getInt("id");
         todo.remove("id");
         todo.put("doneStatus", true);
@@ -178,5 +186,15 @@ public class PriorityStepDefinition extends BaseTest {
     @And("^the updated todo will be returned to the user and marked as done$")
     public void theUpdatedTodoWillBeReturnedToTheUserAndMarkedAsDone() {
         assertDoneStatusEquals(response, true);
+    }
+
+    @Then("^the todo with title ([^>]*) will not be modified$")
+    public void theTodoWillNotBeModified(String selectedTitle) {
+        assertEquals(findTodoByName(selectedTitle), originalValue);
+    }
+
+    @And("^the todo will be returned to the user$")
+    public void theTodoWillBeReturnedToTheUser() {
+        assertEquals(response, originalValue);
     }
 }
