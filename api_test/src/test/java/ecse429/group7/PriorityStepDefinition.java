@@ -26,23 +26,17 @@ public class PriorityStepDefinition extends BaseTest {
     JSONObject originalTodoList;
 
     @Before
-    public static void before() {
+    public void initVars() {
         Unirest.config().defaultBaseUrl(BASE_URL);
         startServer();
-    }
-
-    @Before
-    public void initVars() {
         errorMessage = "";
         response = null;
         originalValue = null;
         originalTodoList = null;
     }
 
-    @Before
-
     @After
-    public static void after() {
+    public void after() {
         stopServer();
     }
 
