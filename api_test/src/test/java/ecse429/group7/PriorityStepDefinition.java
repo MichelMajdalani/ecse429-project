@@ -12,32 +12,48 @@ import io.cucumber.datatable.DataTable;
 import kong.unirest.Unirest;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
+import kong.unirest.json.JSONObject;
 
 import static org.junit.Assert.*;
 
 import java.util.List;
-import org.junit.runner.RunWith;
-import io.cucumber.junit.Cucumber;
-
 
 public class PriorityStepDefinition extends BaseTest {
 
     String errorMessage;
+    JSONObject originalValue;
+    JSONObject response;
+    JSONObject originalTodoList;
+
+    @Before
+    public void initVars() {
+        Unirest.config().defaultBaseUrl(BASE_URL);
+        startServer();
+        errorMessage = "";
+        response = null;
+        originalValue = null;
+        originalTodoList = null;
+    }
+
+    @After
+    public void after() {
+        stopServer();
+    }
 
     @Given("^the following categories are registered in the todoManagerRestAPI system:$")
-    public void the_following_categories_are_registered_in_the_todomanagerrestapi_system(DataTable table) {
+    public void the_following_categories_are_registered_in_the_todo_manager_restapi_system(DataTable table) {
         List<List<String>> rows = table.asLists(String.class);
     
-        int idx = 0;
+        boolean firstLine = true;
         for (List<String> columns : rows) {
             // ignore title row
-            if(idx != 0)
-            {
-                HttpResponse<JsonNode> response = Unirest.post("/categories")
-                    .body("{\n\"description\":\"" + columns.get(1) + "\",\n  \"title\":\"" + columns.get(0) + "\"\n}").asJson();
-        
+            if(!firstLine) {
+                Unirest.post("/categories")
+                        .body("{\n\"description\":\"" + columns.get(1) + "\",\n  \"title\":\""
+                                + columns.get(0) + "\"\n}")
+                        .asJson();
             }
-            idx++;
+            firstLine = false;
         }
     }
 
@@ -45,15 +61,16 @@ public class PriorityStepDefinition extends BaseTest {
     public void the_following_todo_is_registered_in_the_system(DataTable table) {
         List<List<String>> rows = table.asLists(String.class);
     
-        int idx = 0;
+        boolean firstLine = true;
         for (List<String> columns : rows) {
             // ignore title row
-            if(idx != 0)
-            {
-                HttpResponse<JsonNode> response = Unirest.post("/todos")
-                .body("{\"title\":\"" + columns.get(0) + "\",\"doneStatus\":" + columns.get(1) + ",\"description\":\"" + columns.get(2) + "\"}").asJson();
+            if(!firstLine) {
+                Unirest.post("/todos")
+                        .body("{\"title\":\"" + columns.get(0) + "\",\"doneStatus\":"
+                                + columns.get(1) + ",\"description\":\"" + columns.get(2) + "\"}")
+                        .asJson();
             }
-            idx++;
+            firstLine = false;
         }
     }
 
@@ -62,13 +79,12 @@ public class PriorityStepDefinition extends BaseTest {
         // Find ID of Task todo_title
         int id = findIdFromTodoName(todo_title);
  
-        HttpResponse<JsonNode> response = 
-        Unirest.post("/todos/" + String.valueOf(id) +"/categories").body("{\n\"title\":\"" + priority + "\"\n}\n").asJson();
+        HttpResponse<JsonNode> response = Unirest.post("/todos/" + id +"/categories")
+                .body("{\n\"title\":\"" + priority + "\"\n}\n").asJson();
 
-        if(response.getStatus() != 200 && response.getStatus() != 201)
-        {
+        if(response.getStatus() != 200 && response.getStatus() != 201) {
             errorMessage = response.getBody().getObject().getJSONArray("errorMessages").getString(0);
-         }     
+        }
 
     }
 
@@ -77,7 +93,8 @@ public class PriorityStepDefinition extends BaseTest {
         int category_id = findIdFromTodoCategoryName(priority, task);
         int todo_id = findIdFromTodoName(task);
         
-        HttpResponse<JsonNode> response = Unirest.delete("/todos/" + String.valueOf(todo_id) + "/categories/" + String.valueOf(category_id)).header("Content-Type", "application/json")
+        Unirest.delete("/todos/" + todo_id + "/categories/" + category_id)
+                .header("Content-Type", "application/json")
         .asJson();
     }
 
@@ -87,7 +104,7 @@ public class PriorityStepDefinition extends BaseTest {
     }
 
     @Then("^the \"([^\"]*)\" should be classified as a \"([^\"]*)\" priority task$")
-    public void the_something_should_be_classified_as_a_something_priority_task(String todo, String priority) throws Throwable {
+    public void the_something_should_be_classified_as_a_something_priority_task(String todo, String priority) {
         int category_id = findIdFromTodoCategoryName(priority, todo);
 
         // if != -1, then found category with name 
@@ -100,31 +117,97 @@ public class PriorityStepDefinition extends BaseTest {
     }
 
     @And("^the todo \"([^\"]*)\" is assigned as a \"([^\"]*)\" priority task$")
-    public void the_todo_something_is_assigned_as_a_something_priority_task(String todo_title, String priority) throws Throwable {
+    public void the_todo_something_is_assigned_as_a_something_priority_task(String todo_title, String priority) {
         user_requests_to_categorize_todo_with_title_something_as_something_priority(todo_title, priority);
     }
 
-    @Before
-    public static void before()
-    {
-        Unirest.config().defaultBaseUrl(BASE_URL);
-        while(!startServer());
-        try{
+    @Given("^the API server is running$")
+    public void theAPIServerIsRunning() {
+        waitUntilOnline();
+    }
 
-            Thread.sleep(500);
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
+    @And("^the following todos registered in the system$")
+    public void theFollowingTodosRegisteredInTheSystem(DataTable table) {
+        List<List<String>> rows = table.asLists(String.class);
+
+        boolean firstLine = true;
+        for (List<String> columns : rows) {
+            // ignore title row
+            if(!firstLine) {
+                String title = "\"title\":\"" + columns.get(0) + "\"";
+                String doneStatus = "\"doneStatus\":" + columns.get(1);
+                String description = "\"description\":\"" + columns.get(2) + "\"";
+                Unirest.post("/todos")
+                        .body("{\n" + title + ",\n" + doneStatus + ",\n" + description + "\n}")
+                        .asJson();
+            }
+            firstLine = false;
         }
     }
 
-    @After
-    public static void after()
-    {
-        try {
-            Unirest.get("/shutdown").asJson();
-        } catch (Exception ignored) {}
+    public static void assertDoneStatusEquals(JSONObject todo, boolean val) {
+        assertNotNull(todo);
+        assertTrue(todo.getString("doneStatus").equalsIgnoreCase(val + ""));
     }
 
+    @Given("^([^>]*) is the title of a todo registered on the system$")
+    public void selectedTitleIsTheTitleOfATodoRegisteredOnTheSystem(String selectedTitle) {
+        assertNotNull(findTodoByName(selectedTitle));
+    }
+
+    @Given("^([^>]*) is not a title of a todo registered on the system$")
+    public void selectedTitleIsNotTheTitleOfATodoRegisteredOnTheSystem(String selectedTitle) {
+        assertNull(findTodoByName(selectedTitle));
+    }
+
+    @And("^the todo with title ([^>]*) is not marked as done$")
+    public void theTodoWithTitleSelectedTitleIsNotMarkedAsDone(String selectedTitle) {
+        assertDoneStatusEquals(findTodoByName(selectedTitle), false);
+    }
+
+    @And("^the todo with title ([^>]*) is marked as done$")
+    public void theTodoWithTitleSelectedTitleIsMarkedAsDone(String selectedTitle) {
+        assertDoneStatusEquals(findTodoByName(selectedTitle), true);
+    }
+
+    @When("^the user chooses to mark the task named ([^>]*) as done$")
+    public void theTheUserChoosesToMarkTheTaskNamedSelectedTitleAsDone(String selectedTitle) {
+        originalTodoList = Unirest.get("/todos").asJson().getBody().getObject();
+        JSONObject todo = findTodoByName(selectedTitle);
+        if (todo == null) {
+            response = Unirest.post("/todos/-1").asJson().getBody().getObject();
+            return;
+        }
+        originalValue = new JSONObject(todo.toString());
+        int id = todo.getInt("id");
+        todo.remove("id");
+        todo.put("doneStatus", true);
+        response = Unirest.post("/todos/" + id).body(todo).asJson().getBody().getObject();
+    }
+
+    @Then("^the todo with title ([^>]*) will be marked as done on the system$")
+    public void theTodoWithTitleSelectedTitleWillBeMarkedAsDoneOnTheSystem(String selectedTitle) {
+        assertDoneStatusEquals(findTodoByName(selectedTitle), true);
+    }
+
+    @And("^the updated todo will be returned to the user and marked as done$")
+    public void theUpdatedTodoWillBeReturnedToTheUserAndMarkedAsDone() {
+        assertDoneStatusEquals(response, true);
+    }
+
+    @Then("^no todo on the system will be modified$")
+    public void noTodoOnTheSystemWillBeModified() {
+        assertEquals(originalTodoList, Unirest.get("/todos").asJson().getBody().getObject());
+    }
+
+    @And("^the todo will be returned to the user$")
+    public void theTodoWillBeReturnedToTheUser() {
+        assertEquals(response, originalValue);
+    }
+
+    @And("the user will receive an error message that the specified todo does not exist")
+    public void theUserWillReceiveAnErrorMessageThatTheSpecifiedTodoDoesNotExist() {
+        assertEquals(response.getJSONArray("errorMessages").get(0),
+                "No such todo entity instance with GUID or ID -1 found");
+    }
 }
