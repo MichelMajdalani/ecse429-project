@@ -1,4 +1,6 @@
 package ecse429.group7;
+import kong.unirest.UnirestException;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 import static org.junit.Assert.assertEquals;
@@ -16,6 +18,7 @@ import java.io.InputStreamReader;
 public class BaseTest 
 {
     private static final String BASE_URL = "http://localhost:4567";
+    private static Process serverProcess;
     
     protected static final int STATUS_CODE_OK = 200;
     protected static final int STATUS_CODE_CREATED = 201;
@@ -30,21 +33,44 @@ public class BaseTest
         startServer();
     }
 
+    @AfterClass
+    public static void tearDownAllTests() {
+        stopServer();
+    }
+
     public static void startServer() {
         try {
             final Runtime re = Runtime.getRuntime();
             ProcessBuilder pb = new ProcessBuilder("java", "-jar", "../runTodoManagerRestAPI-1.5.5.jar");
-            Process ps = pb.start();
-            final InputStream is = ps.getInputStream();
+            if (serverProcess != null) {
+                serverProcess.destroy();
+            }
+            serverProcess = pb.start();
+            final InputStream is = serverProcess.getInputStream();
             final BufferedReader output = new BufferedReader(new InputStreamReader(is));
             while (true) {
                 String line = output.readLine();
-                if (line!=null && line.contains("Running on 4567"))
+                if (line != null && line.contains("Running on 4567")) {
+                    waitUntilOnline();
                     return;
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static void waitUntilOnline() {
+        int status = 0;
+        do {
+            try {
+                status = Unirest.get("/gui").asString().getStatus();
+            } catch(UnirestException ignored) { }
+        } while (status != 200);
+    }
+
+    public static void stopServer() {
+        serverProcess.destroy();
     }
 
     public static void assertGetStatusCode(String url, int status_code)
