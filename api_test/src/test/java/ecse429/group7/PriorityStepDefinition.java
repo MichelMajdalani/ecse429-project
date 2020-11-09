@@ -21,6 +21,17 @@ public class PriorityStepDefinition extends BaseTest {
 
     String errorMessage;
 
+    @Before
+    public static void before() {
+        Unirest.config().defaultBaseUrl(BASE_URL);
+        startServer();
+    }
+
+    @After
+    public static void after() {
+        stopServer();
+    }
+
     @Given("^the following categories are registered in the todoManagerRestAPI system:$")
     public void the_following_categories_are_registered_in_the_todomanagerrestapi_system(DataTable table) {
         List<List<String>> rows = table.asLists(String.class);
@@ -102,15 +113,27 @@ public class PriorityStepDefinition extends BaseTest {
         user_requests_to_categorize_todo_with_title_something_as_something_priority(todo_title, priority);
     }
 
-    @Before
-    public static void before() {
-        Unirest.config().defaultBaseUrl(BASE_URL);
-        startServer();
+    @Given("the API server is running")
+    public void theAPIServerIsRunning() {
+        waitUntilOnline();
     }
 
-    @After
-    public static void after() {
-        stopServer();
-    }
+    @And("the following todos registered in the system")
+    public void theFollowingTodosRegisteredInTheSystem(DataTable table) {
+        List<List<String>> rows = table.asLists(String.class);
 
+        boolean firstLine = true;
+        for (List<String> columns : rows) {
+            // ignore title row
+            if(!firstLine) {
+                String title = "\"title\":\"" + columns.get(0) + "\"";
+                String doneStatus = "\"doneStatus\":\"" + columns.get(1).equalsIgnoreCase("TRUE") + "\"";
+                String description = "\"doneStatus\":\"" + columns.get(2) + "\"";
+                Unirest.post("/todos")
+                        .body("{\n" + title + ",\n" + doneStatus + ",\n" + description + "\n}")
+                        .asJson();
+            }
+            firstLine = false;
+        }
+    }
 }

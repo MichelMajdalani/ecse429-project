@@ -39,7 +39,6 @@ public class BaseTest {
 
     public static void startServer() {
         try {
-            final Runtime re = Runtime.getRuntime();
             ProcessBuilder pb = new ProcessBuilder("java", "-jar", "../runTodoManagerRestAPI-1.5.5.jar");
             if (serverProcess != null) {
                 serverProcess.destroy();
@@ -60,12 +59,25 @@ public class BaseTest {
     }
 
     public static void waitUntilOnline() {
-        int status = 0;
-        do {
+        int tries = 0;
+        while (!isOnline()) {
             try {
-                status = Unirest.get("/").asString().getStatus();
-            } catch(UnirestException ignored) { }
-        } while (status != 200);
+                Thread.sleep(10);
+            } catch (InterruptedException ignored) {}
+            tries++;
+            if (tries > 100) {
+                startServer();
+                tries = 0;
+            }
+        }
+    }
+
+    public static boolean isOnline() {
+        try {
+            int status = Unirest.get("/").asString().getStatus();
+            return status == 200;
+        } catch (UnirestException ignored) { }
+        return false;
     }
 
     public static void stopServer() {
