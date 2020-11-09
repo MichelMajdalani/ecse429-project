@@ -64,7 +64,7 @@ public class BaseTest
         int status = 0;
         do {
             try {
-                status = Unirest.get("/gui").asString().getStatus();
+                status = Unirest.get("/").asString().getStatus();
             } catch(UnirestException ignored) { }
         } while (status != 200);
     }
