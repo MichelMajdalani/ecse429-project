@@ -1,8 +1,10 @@
 package ecse429.group7;
+
 import kong.unirest.UnirestException;
+import kong.unirest.json.JSONArray;
+import kong.unirest.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.AfterClass;
 
 
 import static org.junit.Assert.assertEquals;
@@ -16,20 +18,16 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 
-public class BaseTest 
-{
+public class BaseTest {
     public static final String BASE_URL = "http://localhost:4567";
-    private static Process serverProcess;
-    
     protected static final int STATUS_CODE_OK = 200;
     protected static final int STATUS_CODE_CREATED = 201;
     protected static final int STATUS_CODE_BAD_REQUEST = 400;
     protected static final int STATUS_CODE_NOT_FOUND = 404;
-    protected static final int STATUS_CODE_METHOD_NOT_ALLOWED = 405;
+    private static Process serverProcess;
 
     @BeforeClass
-    public static void setupForAllTests()
-    {
+    public static void setupForAllTests() {
         Unirest.config().defaultBaseUrl(BASE_URL);
         startServer();
     }
@@ -74,34 +72,29 @@ public class BaseTest
         serverProcess.destroy();
     }
 
-    public static void assertGetStatusCode(String url, int status_code)
-    {
+    public static void assertGetStatusCode(String url, int status_code) {
         HttpResponse<JsonNode> response = Unirest.get(url).asJson();
         assertEquals(response.getStatus(), status_code);
     }
 
-    public static void assertHeadStatusCode(String url, int status_code)
-    {
+    public static void assertHeadStatusCode(String url, int status_code) {
         HttpResponse<JsonNode> response = Unirest.head(url).asJson();
         assertEquals(response.getStatus(), status_code);
     }
 
-    public static void assertGetErrorMessage(String url, String expected_message, int index)
-    {
+    public static void assertGetErrorMessage(String url, String expected_message, int index) {
         HttpResponse<JsonNode> response = Unirest.get(url).asJson();
         assertEquals(response.getBody().getObject().getJSONArray("errorMessages").getString(index), expected_message);
     }
 
-    public static int findIdFromTodoName(String todo_name)
-    {
-        HttpResponse<JsonNode> response = Unirest.get("/todos").asJson();
+    public static int findIdFromTodoName(String todo_name) {
+        JSONObject response = Unirest.get("/todos").asJson().getBody().getObject();
         int id = -1;
 
-        for(int i = 0; i < response.getBody().getObject().getJSONArray("todos").length(); i++)
-        {
-            if(response.getBody().getObject().getJSONArray("todos").getJSONObject(i).getString("title").equals(todo_name))
-            {
-                id = response.getBody().getObject().getJSONArray("todos").getJSONObject(i).getInt("id");
+        for (Object todo : response.getJSONArray("todos")) {
+            JSONObject t = (JSONObject) todo;
+            if (t.getString("title").equals(todo_name)) {
+                id = t.getInt("id");
                 break;
             }
         }
@@ -109,32 +102,27 @@ public class BaseTest
         return id;
     }
 
-    public static int findIdFromTodoCategoryName(String category_name, String todo_name)
-    {
-        HttpResponse<JsonNode> response = Unirest.get("/todos").asJson();
-
+    public static int findIdFromTodoCategoryName(String category_name, String todo_name) {
+        JSONObject response = Unirest.get("/todos").asJson().getBody().getObject();
         int id = -1;
 
-        for(int i = 0; i < response.getBody().getObject().getJSONArray("todos").length(); i++)
-        {
-            if(response.getBody().getObject().getJSONArray("todos").getJSONObject(i).getString("title").equals(todo_name))
-            {
-                int todo_id = response.getBody().getObject().getJSONArray("todos").getJSONObject(i).getInt("id");
-                HttpResponse<JsonNode> response_cat = Unirest.get("/todos/" + todo_id + "/categories").asJson();
-                System.out.println(todo_id + " " + response_cat.getBody().toString());
-
-                for(int j = 0; j < response_cat.getBody().getObject().getJSONArray("categories").length(); j++)
-                {
-                    System.out.println(response_cat.getBody().getObject().getJSONArray("categories").getJSONObject(j).getString("title"));
-                    if(response_cat.getBody().getObject().getJSONArray("categories").getJSONObject(j).getString("title").equals(category_name))
-                    {
-                        id = response_cat.getBody().getObject().getJSONArray("categories").getJSONObject(j).getInt("id");
+        for (Object todo : response.getJSONArray("todos")) {
+            JSONObject t = (JSONObject) todo;
+            if (t.getString("title").equals(todo_name)) {
+                int todo_id = t.getInt("id");
+                JSONArray response_cat = Unirest.get("/todos/" + todo_id + "/categories").asJson()
+                        .getBody().getObject().getJSONArray("categories");
+                for (Object cat : response_cat) {
+                    JSONObject c = (JSONObject) cat;
+                    System.out.println(c.getString("title"));
+                    if (c.getString("title").equals(category_name)) {
+                        id = c.getInt("id");
                         break;
                     }
                 }
             }
         }
-    
+
         return id;
     }
 }
