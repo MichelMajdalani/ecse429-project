@@ -12,7 +12,10 @@ import io.cucumber.datatable.DataTable;
 import kong.unirest.Unirest;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
+import kong.unirest.json.JSONArray;
 import kong.unirest.json.JSONObject;
+
+import javax.xml.crypto.Data;
 
 import static org.junit.Assert.*;
 
@@ -51,23 +54,6 @@ public class PriorityStepDefinition extends BaseTest {
                 Unirest.post("/categories")
                         .body("{\n\"description\":\"" + columns.get(1) + "\",\n  \"title\":\""
                                 + columns.get(0) + "\"\n}")
-                        .asJson();
-            }
-            firstLine = false;
-        }
-    }
-
-    @Given("^the following todo is registered in the system:$")
-    public void the_following_todo_is_registered_in_the_system(DataTable table) {
-        List<List<String>> rows = table.asLists(String.class);
-    
-        boolean firstLine = true;
-        for (List<String> columns : rows) {
-            // ignore title row
-            if(!firstLine) {
-                Unirest.post("/todos")
-                        .body("{\"title\":\"" + columns.get(0) + "\",\"doneStatus\":"
-                                + columns.get(1) + ",\"description\":\"" + columns.get(2) + "\"}")
                         .asJson();
             }
             firstLine = false;
@@ -126,6 +112,7 @@ public class PriorityStepDefinition extends BaseTest {
         waitUntilOnline();
     }
 
+    @Given("^the following todo is registered in the system:$")
     @And("^the following todos registered in the system$")
     public void theFollowingTodosRegisteredInTheSystem(DataTable table) {
         List<List<String>> rows = table.asLists(String.class);
@@ -134,15 +121,19 @@ public class PriorityStepDefinition extends BaseTest {
         for (List<String> columns : rows) {
             // ignore title row
             if(!firstLine) {
-                String title = "\"title\":\"" + columns.get(0) + "\"";
-                String doneStatus = "\"doneStatus\":" + columns.get(1);
-                String description = "\"description\":\"" + columns.get(2) + "\"";
-                Unirest.post("/todos")
-                        .body("{\n" + title + ",\n" + doneStatus + ",\n" + description + "\n}")
-                        .asJson();
+                addTodoByRow(columns);
             }
             firstLine = false;
         }
+    }
+
+    public static JSONObject addTodoByRow(List<String> columns) {
+        String title = "\"title\":\"" + columns.get(0) + "\"";
+        String doneStatus = "\"doneStatus\":" + columns.get(1);
+        String description = "\"description\":\"" + columns.get(2) + "\"";
+        return Unirest.post("/todos")
+                .body("{\n" + title + ",\n" + doneStatus + ",\n" + description + "\n}")
+                .asJson().getBody().getObject();
     }
 
     public static void assertDoneStatusEquals(JSONObject todo, boolean val) {
@@ -209,5 +200,52 @@ public class PriorityStepDefinition extends BaseTest {
     public void theUserWillReceiveAnErrorMessageThatTheSpecifiedTodoDoesNotExist() {
         assertEquals(response.getJSONArray("errorMessages").get(0),
                 "No such todo entity instance with GUID or ID -1 found");
+    }
+
+    @Given("^the following projects exist on the system$")
+    public void theFollowingProjectsExistOnTheSystem(DataTable table) {
+        List<List<String>> rows = table.asLists(String.class);
+
+        boolean firstLine = true;
+        for (List<String> columns : rows) {
+            // ignore title row
+            if(!firstLine) {
+                String title = "\"title\":\"" + columns.get(0) + "\"";
+                String completed = "\"completed\":" + columns.get(1);
+                String active = "\"active\":" + columns.get(2);
+                String description = "\"description\":\"" + columns.get(3) + "\"";
+                Unirest.post("/projects")
+                        .body("{\n" + title + ",\n" + completed + ",\n"
+                                + active + ",\n"
+                                + description + "\n}")
+                        .asJson();
+            }
+            firstLine = false;
+        }
+    }
+
+    @And("the following todos are associated with {string}")
+    public void theFollowingTodosAreAssociatedWithClass(String className, DataTable table) {
+        List<List<String>> rows = table.asLists(String.class);
+        int projId = findProjectByName(className).getInt("id");
+        boolean firstLine = true;
+        for (List<String> columns : rows) {
+            // ignore title row
+            if(!firstLine) {
+                int id = addTodoByRow(columns).getInt("id");
+                Unirest.post("/todos/" + id + "/tasksof")
+                        .body("{\"id\":\"" + projId + "\"}")
+                        .asJson();
+            }
+            firstLine = false;
+        }
+    }
+
+    @And("no todos are associated with {string}")
+    public void noTodosAreAssociatedWithFACC(String className) {
+        int projId = findProjectByName(className).getInt("id");
+        JSONArray response = Unirest.get("/projects/" + projId + "/tasks")
+                .asJson().getBody().getObject().getJSONArray("todos");
+        assertEquals(response.length(), 0);
     }
 }

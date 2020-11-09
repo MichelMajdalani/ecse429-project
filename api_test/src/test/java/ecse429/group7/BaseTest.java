@@ -109,6 +109,17 @@ public class BaseTest {
         return null;
     }
 
+    public static JSONObject findProjectByName(String projectName) {
+        JSONObject response = Unirest.get("/projects").asJson().getBody().getObject();
+        for (Object proj : response.getJSONArray("projects")) {
+            JSONObject project = (JSONObject) proj;
+            if (project.getString("title").equals(projectName)) {
+                return project;
+            }
+         }
+        return null;
+    }
+
     public static int findIdFromTodoName(String todo_name) {
         JSONObject todo = findTodoByName(todo_name);
         if (todo == null) return -1;
