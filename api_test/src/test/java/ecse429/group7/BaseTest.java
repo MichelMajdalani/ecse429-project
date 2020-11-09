@@ -17,7 +17,7 @@ import java.io.InputStreamReader;
 
 public class BaseTest 
 {
-    private static final String BASE_URL = "http://localhost:4567";
+    public static final String BASE_URL = "http://localhost:4567";
     
     protected static final int STATUS_CODE_OK = 200;
     protected static final int STATUS_CODE_CREATED = 201;

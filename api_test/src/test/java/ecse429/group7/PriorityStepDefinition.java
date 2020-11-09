@@ -107,6 +107,7 @@ public class PriorityStepDefinition extends BaseTest {
     @Before
     public static void before()
     {
+        Unirest.config().defaultBaseUrl(BASE_URL);
         while(!startServer());
         try{
 
