@@ -23,6 +23,7 @@ public class PriorityStepDefinition extends BaseTest {
     String errorMessage;
     JSONObject originalValue;
     JSONObject response;
+    JSONObject originalTodoList;
 
     @Before
     public static void before() {
@@ -35,6 +36,7 @@ public class PriorityStepDefinition extends BaseTest {
         errorMessage = "";
         response = null;
         originalValue = null;
+        originalTodoList = null;
     }
 
     @Before
@@ -150,12 +152,18 @@ public class PriorityStepDefinition extends BaseTest {
     }
 
     public static void assertDoneStatusEquals(JSONObject todo, boolean val) {
+        assertNotNull(todo);
         assertTrue(todo.getString("doneStatus").equalsIgnoreCase(val + ""));
     }
 
     @Given("^([^>]*) is the title of a todo registered on the system$")
     public void selectedTitleIsTheTitleOfATodoRegisteredOnTheSystem(String selectedTitle) {
         assertNotNull(findTodoByName(selectedTitle));
+    }
+
+    @Given("^([^>]*) is not a title of a todo registered on the system$")
+    public void selectedTitleIsNotTheTitleOfATodoRegisteredOnTheSystem(String selectedTitle) {
+        assertNull(findTodoByName(selectedTitle));
     }
 
     @And("^the todo with title ([^>]*) is not marked as done$")
@@ -168,9 +176,14 @@ public class PriorityStepDefinition extends BaseTest {
         assertDoneStatusEquals(findTodoByName(selectedTitle), true);
     }
 
-    @When("^the the user chooses to mark the task named ([^>]*) as done$")
+    @When("^the user chooses to mark the task named ([^>]*) as done$")
     public void theTheUserChoosesToMarkTheTaskNamedSelectedTitleAsDone(String selectedTitle) {
+        originalTodoList = Unirest.get("/todos").asJson().getBody().getObject();
         JSONObject todo = findTodoByName(selectedTitle);
+        if (todo == null) {
+            response = Unirest.post("/todos/-1").asJson().getBody().getObject();
+            return;
+        }
         originalValue = new JSONObject(todo.toString());
         int id = todo.getInt("id");
         todo.remove("id");
@@ -188,13 +201,19 @@ public class PriorityStepDefinition extends BaseTest {
         assertDoneStatusEquals(response, true);
     }
 
-    @Then("^the todo with title ([^>]*) will not be modified$")
-    public void theTodoWillNotBeModified(String selectedTitle) {
-        assertEquals(findTodoByName(selectedTitle), originalValue);
+    @Then("^no todo on the system will be modified$")
+    public void noTodoOnTheSystemWillBeModified() {
+        assertEquals(originalTodoList, Unirest.get("/todos").asJson().getBody().getObject());
     }
 
     @And("^the todo will be returned to the user$")
     public void theTodoWillBeReturnedToTheUser() {
         assertEquals(response, originalValue);
+    }
+
+    @And("the user will receive an error message that the specified todo does not exist")
+    public void theUserWillReceiveAnErrorMessageThatTheSpecifiedTodoDoesNotExist() {
+        assertEquals(response.getJSONArray("errorMessages").get(0),
+                "No such todo entity instance with GUID or ID -1 found");
     }
 }

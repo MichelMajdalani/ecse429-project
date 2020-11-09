@@ -15,7 +15,7 @@ so I can track my accomplishments.
   Scenario Outline: Mark non completed todo as completed (Normal Flow)
     Given <selectedTitle> is the title of a todo registered on the system
       And the todo with title <selectedTitle> is not marked as done
-     When the the user chooses to mark the task named <selectedTitle> as done
+     When the user chooses to mark the task named <selectedTitle> as done
      Then the todo with title <selectedTitle> will be marked as done on the system
       And the updated todo will be returned to the user and marked as done
     Examples:
@@ -26,16 +26,20 @@ so I can track my accomplishments.
   Scenario Outline: Mark already completed todo as completed (Alternate Flow)
     Given <selectedTitle> is the title of a todo registered on the system
       And the todo with title <selectedTitle> is marked as done
-     When the the user chooses to mark the task named <selectedTitle> as done
-     Then the todo with title <selectedTitle> will not be modified
+     When the user chooses to mark the task named <selectedTitle> as done
+     Then no todo on the system will be modified
       And the todo will be returned to the user
     Examples:
       | selectedTitle          |
       | Complete chem homework |
       | x                      |
-#
-#  Scenario: Mark non-existant todo as completed (Error flow)
-#    Given <selectedTitle> is not a title of a todo registered on the system
-#     When the the user choses to mark the todo named <selectedTitle> as done
-#     Then no todo on the system will be modified
-#      And the user will receive an error message that the specified todo does not exist
+
+  Scenario Outline: Mark non-existent todo as completed (Error flow)
+    Given <selectedTitle> is not a title of a todo registered on the system
+     When the user chooses to mark the task named <selectedTitle> as done
+     Then no todo on the system will be modified
+      And the user will receive an error message that the specified todo does not exist
+    Examples:
+      | selectedTitle |
+      | fake title    |
+      | null          |
