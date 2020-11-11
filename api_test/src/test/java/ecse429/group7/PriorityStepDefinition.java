@@ -70,23 +70,6 @@ public class PriorityStepDefinition extends BaseTest {
                         .asJson();
     }
 
-    @Given("the following todo is registered in the system:")
-    public void the_following_todo_is_registered_in_the_system(DataTable table) {
-        List<List<String>> rows = table.asLists(String.class);
-    
-        boolean firstLine = true;
-        for (List<String> columns : rows) {
-            // ignore title row
-            if(!firstLine) {
-                Unirest.post("/todos")
-                        .body("{\"title\":\"" + columns.get(0) + "\",\"doneStatus\":"
-                                + columns.get(1) + ",\"description\":\"" + columns.get(2) + "\"}")
-                        .asJson();
-            }
-            firstLine = false;
-        }
-    }
-
     @When("user requests to categorize todo with title {string} as {string} priority")
     public void when_user_requests_to_categorize_todo_with_title_as_priority(String todotitle, String prioritytoassign) {
         // Find ID of Task todo_title
