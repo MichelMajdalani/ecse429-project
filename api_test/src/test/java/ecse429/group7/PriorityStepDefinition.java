@@ -134,13 +134,17 @@ public class PriorityStepDefinition extends BaseTest {
         }
     }
 
-    public static JSONObject addTodoByRow(List<String> columns) {
+    public JSONObject addTodoByRow(List<String> columns) {
         String title = "\"title\":\"" + columns.get(0) + "\"";
         String doneStatus = "\"doneStatus\":" + columns.get(1);
         String description = "\"description\":\"" + columns.get(2) + "\"";
-        return Unirest.post("/todos")
+        JSONObject todoObj = Unirest.post("/todos")
                 .body("{\n" + title + ",\n" + doneStatus + ",\n" + description + "\n}")
                 .asJson().getBody().getObject();
+        if(columns.size() == 4) {
+            when_user_requests_to_categorize_todo_with_title_as_priority(columns.get(0), columns.get(3));
+        }
+        return todoObj;
     }
 
     public static void assertDoneStatusEquals(JSONObject todo, boolean val) {
@@ -439,5 +443,41 @@ public class PriorityStepDefinition extends BaseTest {
     public void the_todo_with_title_is_assigned_as_a(String todotitle, String todoprioritytask) {
         when_user_requests_to_categorize_todo_with_title_as_priority(todotitle, todoprioritytask);
     }
-    
+
+    // ID 8: Query incomplete HIGH priority tasks
+    @When("^the user requests the incomplete HIGH priority tasks for the course with title (.+)$")
+    public void the_students_queries_all_incomplete_tasks_with_high_priority_from_a_course_with_title(String projecttitle) {
+        incompleteTasks = new JSONArray();
+        JSONArray tasks = getProjectTasks(projecttitle);
+        if (tasks == null) {
+            response = Unirest.get("/projects/-1/tasks")
+                    .asJson().getBody().getObject();
+            return;
+        }
+        for (Object o : tasks) {
+            int id = ((JSONObject)o).getInt("id");
+            JSONObject todo = (JSONObject) Unirest.get("/todos/" + id)
+                    .asJson().getBody().getObject()
+                    .getJSONArray("todos").get(0);
+            int priorityID = ((JSONObject) ((JSONArray) todo.get("categories")).get(0)).getInt("id");
+            String category = (String) ((JSONObject) ((JSONArray) ((JSONObject) Unirest.get("/categories/" + priorityID).asJson().getBody().getObject()).get("categories")).get(0)).get("title");
+            if (todo.getString("doneStatus").equalsIgnoreCase("false") && category.equalsIgnoreCase("HIGH")) {
+                incompleteTasks.put(todo);
+            }
+        }
+    }
+
+    @And("^each todo returned will have a HIGH priority$")
+    public void each_todo_returned_will_have_a_high_priority() {
+        // Incomplete High priority is a subset of incoomplete
+        // Incomplete is reset to the incomplete high priority states in the when
+        for (Object o : incompleteTasks) {
+            JSONObject todo = (JSONObject) o;
+            int priorityID = ((JSONObject) ((JSONArray) todo.get("categories")).get(0)).getInt("id");
+            String category = (String) ((JSONObject) ((JSONArray) ((JSONObject) Unirest.get("/categories/" + priorityID).asJson().getBody().getObject()).get("categories")).get(0)).get("title");
+            assertEquals(category, "HIGH");
+        }
+    }
+
+
 }
