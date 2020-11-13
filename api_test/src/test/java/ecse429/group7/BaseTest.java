@@ -146,7 +146,6 @@ public class BaseTest {
                         .getBody().getObject().getJSONArray("categories");
                 for (Object cat : response_cat) {
                     JSONObject c = (JSONObject) cat;
-                    System.out.println(c.getString("title"));
                     if (c.getString("title").equals(category_name)) {
                         id = c.getInt("id");
                         break;

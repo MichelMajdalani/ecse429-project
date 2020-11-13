@@ -62,51 +62,54 @@ public class PriorityStepDefinition extends BaseTest {
         }
     }
 
-    @When("^user requests to categorize todo with title \"([^\"]*)\" as \"([^\"]*)\" priority$")
-    public void user_requests_to_categorize_todo_with_title_something_as_something_priority(String todo_title, String priority) {
+    @Given("the todo with name {string}, done status {string} and description {string} is registered in the system:")
+    public void the_todo_with_name_done_status_and_description_is_registered_in_the_system(String todotitle, String tododonestatus, String tododescription) {
+        Unirest.post("/todos")
+                        .body("{\"title\":\"" + todotitle.replace("\"", "") + "\",\"doneStatus\":"
+                                + tododonestatus.replace("\"", "") + ",\"description\":\"" + tododescription.replace("\"", "") + "\"}")
+                        .asJson();
+    }
+
+    @When("user requests to categorize todo with title {string} as {string} priority")
+    public void when_user_requests_to_categorize_todo_with_title_as_priority(String todotitle, String prioritytoassign) {
         // Find ID of Task todo_title
-        int id = findIdFromTodoName(todo_title);
- 
+        int id = findIdFromTodoName(todotitle.replace("\"", ""));
+
         HttpResponse<JsonNode> response = Unirest.post("/todos/" + id +"/categories")
-                .body("{\n\"title\":\"" + priority + "\"\n}\n").asJson();
+                .body("{\n\"title\":\"" + prioritytoassign.replace("\"", "") + "\"\n}\n").asJson();
 
         if(response.getStatus() != 200 && response.getStatus() != 201) {
             errorMessage = response.getBody().getObject().getJSONArray("errorMessages").getString(0);
         }
-
     }
 
-    @When("^user requests to remove \"([^\"]*)\" priority categorization from \"([^\"]*)\"$")
-    public void user_requests_to_remove_something_priority_categorization_from_something(String priority, String task) {
-        int category_id = findIdFromTodoCategoryName(priority, task);
-        int todo_id = findIdFromTodoName(task);
+    @When("^user requests to remove (.+) priority categorization from (.+)$")
+    public void user_requests_to_remove_priority_categorization_from(String oldpriority, String todotitle) {
+        int category_id = findIdFromTodoCategoryName(oldpriority.replace("\"", ""), todotitle.replace("\"", ""));
+        int todo_id = findIdFromTodoName(todotitle.replace("\"", ""));
         
         Unirest.delete("/todos/" + todo_id + "/categories/" + category_id)
                 .header("Content-Type", "application/json")
         .asJson();
     }
 
-    @When("^user requests to add \"([^\"]*)\" priority categorization to \"([^\"]*)\"$")
-    public void user_requests_to_add_something_priority_categorization_to_something(String priority, String todo_title) {
-        user_requests_to_categorize_todo_with_title_something_as_something_priority(todo_title, priority);
-    }
+    @Then("^the (.+) should be classified as a (.+) priority task$")
+    public void the_should_be_classified_as_a_priority_task(String todotitle, String prioritytoassign) {
+        int category_id = findIdFromTodoCategoryName(prioritytoassign.replace("\"", ""), todotitle.replace("\"", ""));
 
-    @Then("^the \"([^\"]*)\" should be classified as a \"([^\"]*)\" priority task$")
-    public void the_something_should_be_classified_as_a_something_priority_task(String todo, String priority) {
-        int category_id = findIdFromTodoCategoryName(priority, todo);
-
-        // if != -1, then found category with name 
+        // if != -1, then found correct category (priority) with correct todo name 
         assertTrue(category_id != -1);
     }
 
     @Then("^the system should output an error message$")
     public void the_system_should_output_an_error_message() {
         assertEquals(errorMessage, "Could not find parent thing for relationship todos/-1/categories");
+
     }
 
-    @And("^the todo \"([^\"]*)\" is assigned as a \"([^\"]*)\" priority task$")
-    public void the_todo_something_is_assigned_as_a_something_priority_task(String todo_title, String priority) {
-        user_requests_to_categorize_todo_with_title_something_as_something_priority(todo_title, priority);
+    @And("^the todo (.+) is assigned as a (.+) priority task$")
+    public void the_todo_is_assigned_as_a_priority_task(String todotitle, String originalpriority) throws Throwable {
+        when_user_requests_to_categorize_todo_with_title_as_priority(todotitle, originalpriority);
     }
 
     @Given("^the API server is running$")
