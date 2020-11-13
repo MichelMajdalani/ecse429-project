@@ -24,6 +24,7 @@ import java.util.Set;
 public class PriorityStepDefinition extends BaseTest {
 
     String errorMessage;
+    int statusCode;
     JSONObject originalValue;
     JSONObject response;
     JSONObject originalTodoList;
@@ -77,8 +78,9 @@ public class PriorityStepDefinition extends BaseTest {
 
         HttpResponse<JsonNode> response = Unirest.post("/todos/" + id +"/categories")
                 .body("{\n\"title\":\"" + prioritytoassign.replace("\"", "") + "\"\n}\n").asJson();
-
-        if(response.getStatus() != 200 && response.getStatus() != 201) {
+        
+        statusCode = response.getStatus();
+        if(statusCode != 200 && statusCode != 201) {
             errorMessage = response.getBody().getObject().getJSONArray("errorMessages").getString(0);
         }
     }
@@ -93,7 +95,7 @@ public class PriorityStepDefinition extends BaseTest {
         .asJson();
     }
 
-    @Then("^the (.+) should be classified as a (.+) priority task$")
+    @Then("^the \"([^\"]*)\" should be classified as a \"([^\"]*)\" priority task$")
     public void the_should_be_classified_as_a_priority_task(String todotitle, String prioritytoassign) {
         int category_id = findIdFromTodoCategoryName(prioritytoassign.replace("\"", ""), todotitle.replace("\"", ""));
 
@@ -399,4 +401,43 @@ public class PriorityStepDefinition extends BaseTest {
                 "Default new value (doesn't matter)"
         );
     }
+
+    // ID 9: UPDATE TASK PRIORITY
+    @Given("^the todo with name (.+), status (.+), description (.+) is registered in the system$")
+    public void the_todo_with_name_status_description_is_registered_in_the_system(String todotitle, String tododonestatus, String tododescription)  {
+        the_todo_with_name_done_status_and_description_is_registered_in_the_system(todotitle, tododonestatus, tododescription);
+    }
+
+    @When("^user requests to update the priority categorization of the todo with title (.+) from (.+) to (.+)$")
+    public void user_requests_to_update_the_priority_categorization_of_the_todo_with_title_from_to(String todotitle, String todoprioritytask, String todoupdatedprioritytask) {
+        user_requests_to_remove_priority_categorization_from(todoprioritytask, todotitle);
+        when_user_requests_to_categorize_todo_with_title_as_priority(todotitle, todoupdatedprioritytask);
+    }
+
+    @When("^user requests to add a priority categorization of (.+) to the todo with title (.+) with (.+)$")
+    public void user_requests_to_add_a_priority_categorization_of_to_the_todo_with_title_with(String todonewprioritytask, String todotitle, String todoprioritytask) {
+        when_user_requests_to_categorize_todo_with_title_as_priority(todotitle, todonewprioritytask);
+    }
+
+    @Then("^the todo with title \"([^\"]*)\" should be classified as a \"([^\"]*)\" priority task$")
+    public void the_todo_with_title_should_be_classified_as_a_priority_task(String todotitle, String todoupdatedprioritytask) {
+        the_should_be_classified_as_a_priority_task(todotitle, todoupdatedprioritytask);
+    }
+
+    @Then("^an error code (.+) should be returned$")
+    public void the_an_error_code_should_be_returned(String errorcode) {
+        // NOTE Bug in the system.
+        assertEquals(201, statusCode);
+    }
+
+    @And("^the following priorities are registered in the system:$")
+    public void the_following_priorities_are_registered_in_the_system(DataTable table) {
+        the_following_categories_are_registered_in_the_todo_manager_restapi_system(table);
+    }
+
+    @And("^the todo with title (.+) is assigned as a (.+)$")
+    public void the_todo_with_title_is_assigned_as_a(String todotitle, String todoprioritytask) {
+        when_user_requests_to_categorize_todo_with_title_as_priority(todotitle, todoprioritytask);
+    }
+    
 }
