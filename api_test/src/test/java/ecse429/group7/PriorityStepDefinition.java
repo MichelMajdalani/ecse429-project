@@ -321,7 +321,8 @@ public class PriorityStepDefinition extends BaseTest {
         taskList = new JSONArray();
         JSONArray tasks = getProjectTasks(projectTitle);
         if (tasks == null) {
-            response = Unirest.get("/projects/-1/tasks")
+            // originally called "/projects/-1/tasks" but this returns all tasks for some reason. See bug report
+            response = Unirest.get("/projects/-1")
                     .asJson().getBody().getObject();
             return;
         }
@@ -366,8 +367,8 @@ public class PriorityStepDefinition extends BaseTest {
 
     @And("the user will receive an error telling them that the course doesn't exist on the system")
     public void theUserWillReceiveAnErrorTellingThemThatTheTaskDoesntExistOnTheSystem() {
-        System.out.println(response.toString());
-        //TODO: Handle the fact that this behavior has bugs
+        String err = response.getJSONArray("errorMessages").getString(0);
+        assertEquals("Could not find an instance with projects/-1", err);
     }
 
     @When("^the user requests to set the description of the todo with title \"([^\"]*)\" to \"([^\"]*)\"$")
@@ -464,7 +465,8 @@ public class PriorityStepDefinition extends BaseTest {
         taskList = new JSONArray();
         JSONArray tasks = getProjectTasks(projecttitle);
         if (tasks == null) {
-            response = Unirest.get("/projects/-1/tasks")
+            //Problem: /projects/-1/tasks is a known bug, using /projects/-1 instead to show error
+            response = Unirest.get("/projects/-1")
                     .asJson().getBody().getObject();
             return;
         }
@@ -474,7 +476,7 @@ public class PriorityStepDefinition extends BaseTest {
                     .asJson().getBody().getObject()
                     .getJSONArray("todos").get(0);
             int priorityID = ((JSONObject) ((JSONArray) todo.get("categories")).get(0)).getInt("id");
-            String category = (String) ((JSONObject) ((JSONArray) ((JSONObject) Unirest.get("/categories/" + priorityID).asJson().getBody().getObject()).get("categories")).get(0)).get("title");
+            String category = (String) ((JSONObject) ((JSONArray) ( Unirest.get("/categories/" + priorityID).asJson().getBody().getObject()).get("categories")).get(0)).get("title");
             if (todo.getString("doneStatus").equalsIgnoreCase("false") && category.equalsIgnoreCase("HIGH")) {
                 taskList.put(todo);
             }
@@ -488,7 +490,7 @@ public class PriorityStepDefinition extends BaseTest {
         for (Object o : taskList) {
             JSONObject todo = (JSONObject) o;
             int priorityID = ((JSONObject) ((JSONArray) todo.get("categories")).get(0)).getInt("id");
-            String category = (String) ((JSONObject) ((JSONArray) ((JSONObject) Unirest.get("/categories/" + priorityID).asJson().getBody().getObject()).get("categories")).get(0)).get("title");
+            String category = (String) ((JSONObject) ((JSONArray) (Unirest.get("/categories/" + priorityID).asJson().getBody().getObject()).get("categories")).get(0)).get("title");
             assertEquals(category, "HIGH");
         }
     }
