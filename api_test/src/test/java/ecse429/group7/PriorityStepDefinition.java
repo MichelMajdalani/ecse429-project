@@ -28,17 +28,20 @@ public class PriorityStepDefinition extends BaseTest {
     JSONObject originalValue;
     JSONObject response;
     JSONObject originalTodoList;
-    JSONArray incompleteTasks;
+    JSONArray taskList;
+    int counter;
 
     @Before
     public void initVars() {
         Unirest.config().defaultBaseUrl(BASE_URL);
         startServer();
+        counter = 0;
+        statusCode = 0;
         errorMessage = "";
         response = null;
         originalValue = null;
         originalTodoList = null;
-        incompleteTasks = null;
+        taskList = null;
     }
 
     @After
@@ -110,7 +113,7 @@ public class PriorityStepDefinition extends BaseTest {
     }
 
     @And("^the todo (.+) is assigned as a (.+) priority task$")
-    public void the_todo_is_assigned_as_a_priority_task(String todotitle, String originalpriority) throws Throwable {
+    public void the_todo_is_assigned_as_a_priority_task(String todotitle, String originalpriority) {
         when_user_requests_to_categorize_todo_with_title_as_priority(todotitle, originalpriority);
     }
 
@@ -267,20 +270,31 @@ public class PriorityStepDefinition extends BaseTest {
         assertNull(findProjectByName(projectTitle));
     }
 
-    @And("^the class with title (.*) has outstanding tasks$")
-    public void theClassWithTitleProjectTitleHasOutstandingTasks(String projectTitle) {
+    public void projecteHasOutstandingTasks(String projectTitle, boolean checkIncomplete) {
         JSONArray projects = getProjectTasks(projectTitle);
         for (Object o : projects) {
             int id = ((JSONObject)o).getInt("id");
             JSONObject todo = (JSONObject) Unirest.get("/todos/" + id)
                     .asJson().getBody().getObject()
                     .getJSONArray("todos").get(0);
-            if (todo.getString("doneStatus").equalsIgnoreCase("false")) {
+            // NOTE This assumptions makes it less reusable
+            if (!checkIncomplete || todo.getString("doneStatus").equalsIgnoreCase("false")) {
                 return;
             }
         }
         fail();
     }
+
+    @And("^the class with title (.*) has outstanding tasks$")
+    public void theClassWithTitleProjectTitleHasOutstandingTasks(String projectTitle) {
+        projecteHasOutstandingTasks(projectTitle, true);
+    }
+
+    @And("^the class with the title (.*) has outstanding tasks$")
+    public void theClassWithTheTitleProjectTitleHasOutstandingTasks(String projectTitle) {
+        projecteHasOutstandingTasks(projectTitle, false);
+    }
+
 
     @And("^the class with title (.*) has no outstanding tasks$")
     public void theClassWithTitleProjectTitleHasNoOutstandingTasks(String projectTitle) {
@@ -304,7 +318,7 @@ public class PriorityStepDefinition extends BaseTest {
 
     @When("^the user requests the incomplete tasks for the course with title (.*)$")
     public void theUserRequestsTheIncompleteTasksForTheCourseWithTitleProjectTitle(String projectTitle) {
-        incompleteTasks = new JSONArray();
+        taskList = new JSONArray();
         JSONArray tasks = getProjectTasks(projectTitle);
         if (tasks == null) {
             response = Unirest.get("/projects/-1/tasks")
@@ -317,19 +331,19 @@ public class PriorityStepDefinition extends BaseTest {
                     .asJson().getBody().getObject()
                     .getJSONArray("todos").get(0);
             if (todo.getString("doneStatus").equalsIgnoreCase("false")) {
-                incompleteTasks.put(todo);
+                taskList.put(todo);
             }
         }
     }
 
     @Then("^(.*) todos will be returned$")
     public void nTodosWillBeReturned(int n) {
-        assertEquals(n, incompleteTasks.length());
+        assertEquals(n, taskList.length());
     }
 
     @And("^each todo returned will be marked as done$")
     public void eachTodoReturnedWillBeMarkedAsDone() {
-        for (Object o : incompleteTasks) {
+        for (Object o : taskList) {
             JSONObject todo = (JSONObject) o;
             assertDoneStatusEquals(todo, false);
         }
@@ -344,7 +358,7 @@ public class PriorityStepDefinition extends BaseTest {
             taskIDs.add(task.getInt("id"));
         }
 
-        for (Object o : incompleteTasks) {
+        for (Object o : taskList) {
             JSONObject todo = (JSONObject) o;
             assertTrue(taskIDs.contains(todo.getInt("id")));
         }
@@ -447,7 +461,7 @@ public class PriorityStepDefinition extends BaseTest {
     // ID 8: Query incomplete HIGH priority tasks
     @When("^the user requests the incomplete HIGH priority tasks for the course with title (.+)$")
     public void the_students_queries_all_incomplete_tasks_with_high_priority_from_a_course_with_title(String projecttitle) {
-        incompleteTasks = new JSONArray();
+        taskList = new JSONArray();
         JSONArray tasks = getProjectTasks(projecttitle);
         if (tasks == null) {
             response = Unirest.get("/projects/-1/tasks")
@@ -462,7 +476,7 @@ public class PriorityStepDefinition extends BaseTest {
             int priorityID = ((JSONObject) ((JSONArray) todo.get("categories")).get(0)).getInt("id");
             String category = (String) ((JSONObject) ((JSONArray) ((JSONObject) Unirest.get("/categories/" + priorityID).asJson().getBody().getObject()).get("categories")).get(0)).get("title");
             if (todo.getString("doneStatus").equalsIgnoreCase("false") && category.equalsIgnoreCase("HIGH")) {
-                incompleteTasks.put(todo);
+                taskList.put(todo);
             }
         }
     }
@@ -471,7 +485,7 @@ public class PriorityStepDefinition extends BaseTest {
     public void each_todo_returned_will_have_a_high_priority() {
         // Incomplete High priority is a subset of incoomplete
         // Incomplete is reset to the incomplete high priority states in the when
-        for (Object o : incompleteTasks) {
+        for (Object o : taskList) {
             JSONObject todo = (JSONObject) o;
             int priorityID = ((JSONObject) ((JSONArray) todo.get("categories")).get(0)).getInt("id");
             String category = (String) ((JSONObject) ((JSONArray) ((JSONObject) Unirest.get("/categories/" + priorityID).asJson().getBody().getObject()).get("categories")).get(0)).get("title");
@@ -479,5 +493,38 @@ public class PriorityStepDefinition extends BaseTest {
         }
     }
 
+    // ID 4: Remove task from to do list
+    @When("^the student requests to delete an existing task with title (.+)$")
+    public void the_students_requests_to_delete_an_existing_task_with_title_something(String todotitle) {
+        int id = findIdFromTodoName(todotitle);
+        HttpResponse<JsonNode> gResponse = Unirest.delete("/todos/" + id).asJson();
+        statusCode = gResponse.getStatus();
+        response = gResponse.getBody().getObject();
+    }
+
+    @When("^the student requests to delete all tasks from (.+)$")
+    public void the_students_requests_to_delete_all_tasks_from(String projecttitle) {
+        taskList = new JSONArray();
+        JSONArray tasks = getProjectTasks(projecttitle);
+        for (Object o : tasks) {
+            int id = ((JSONObject)o).getInt("id");
+            HttpResponse<JsonNode> gResponse = Unirest.delete("/todos/" + id).asJson();
+            statusCode = gResponse.getStatus();
+            response = gResponse.getBody().getObject();   
+            counter++;     
+        }
+    }
+
+    @Then("^the (.+) todos from (.+) are removed$")
+    public void the_todos_from_are_removed(String n, String projecttitle) {
+        assertEquals(Integer.parseInt(n), counter);
+        // Could check if todo empty
+    }
+
+    @Then("^(.+) is returned.$")
+    @And("^a (.+) is returned$")
+    public void a_is_returned(String statuscode) {
+        assertEquals(Integer.parseInt(statuscode), statusCode);
+    }
 
 }
