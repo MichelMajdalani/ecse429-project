@@ -12,6 +12,7 @@ so I can forget about it.
       | ECSE 444 | true      | false  | Microprocessors        | 
       | ECSE 428 | false     | false  | Software Eng. Practice | 
       | FACC 400 | false     | false  | A do nothing class     | 
+      | FACC 100 | false     | true   | Another class          | 
       And the following todos are associated with 'ECSE 429'
       | title                           | doneStatus | description              | 
       | Complete feature files          | false      | includes this task       | 
@@ -27,6 +28,7 @@ so I can forget about it.
       | Finish sprint 2  | false      | Need to finish front end tests | 
       | Write class test | false      | Mid november                   | 
       And no todos are associated with 'FACC 400'
+      And no todos are associated with 'FACC 100'
   
   Scenario Outline: Remove valid task from todo list (Normal Flow)
     Given <projectTitle> is the title of a class on the system
@@ -35,7 +37,10 @@ so I can forget about it.
      Then <statusCode> is returned.
     Examples: 
       | projectTitle | todoTitle              | statusCode | 
-      | ECSE 429     | Complete feature files | 200       | 
+      | ECSE 429     | Complete feature files | 200        | 
+      | ECSE 429     | Finish project part A  | 200        | 
+      | ECSE 444     | Complete quizzes       | 200        | 
+      | ECSE 428     | Finish sprint 2        | 200        | 
   
   Scenario Outline: Remove all tasks from course (Alternate Flow)
     Given <projectTitle> is the title of a class on the system
@@ -46,6 +51,8 @@ so I can forget about it.
     Examples: 
       | projectTitle | n | statusCode | 
       | ECSE 444     | 3 | 200        | 
+      | ECSE 428     | 2 | 200        | 
+      | ECSE 429     | 3 | 200        | 
   
   Scenario Outline: Remove non-existing task (Error Flow)
     Given <projectTitle> is the title of a class on the system
@@ -54,4 +61,5 @@ so I can forget about it.
      Then <statusCode> is returned.
     Examples: 
       | projectTitle | statusCode | 
-      | FACC 400     |  404       | 
+      | FACC 400     | 404        | 
+      | FACC 100     | 404        | 
