@@ -38,38 +38,39 @@ public class BaseTest {
     }
 
     public static void startServer() {
-        try {
-            ProcessBuilder pb = new ProcessBuilder("java", "-jar", "../runTodoManagerRestAPI-1.5.5.jar");
-            if (serverProcess != null) {
-                serverProcess.destroy();
-            }
-            serverProcess = pb.start();
-            final InputStream is = serverProcess.getInputStream();
-            final BufferedReader output = new BufferedReader(new InputStreamReader(is));
-            while (true) {
-                String line = output.readLine();
-                if (line != null && line.contains("Running on 4567")) {
-                    waitUntilOnline();
+        
+        for (int attempts = 0; attempts < 10; attempts++)
+        {
+            try {
+                ProcessBuilder pb = new ProcessBuilder("java", "-jar", "../runTodoManagerRestAPI-1.5.5.jar");
+                if (serverProcess != null) {
+                    serverProcess.destroy();
+                }
+                serverProcess = pb.start();
+
+                if (waitUntilOnline()) {
                     return;
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+        System.exit(-1); // Failed to start server
     }
 
-    public static void waitUntilOnline() {
+    public static boolean waitUntilOnline() {
         int tries = 0;
         while (!isOnline()) {
             try {
                 Thread.sleep(10);
-            } catch (InterruptedException ignored) {}
+            } catch (InterruptedException ignored) {
+            }
             tries++;
             if (tries > 100) {
-                startServer();
-                tries = 0;
+                return false;
             }
         }
+        return true;
     }
 
     public static boolean isOnline() {
