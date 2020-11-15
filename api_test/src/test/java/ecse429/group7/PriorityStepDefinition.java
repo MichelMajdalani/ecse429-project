@@ -527,4 +527,57 @@ public class PriorityStepDefinition extends BaseTest {
         assertEquals(Integer.parseInt(statuscode), statusCode);
     }
 
+    // ID 6: Remove todolist for class
+
+    @Given("the course with title {string} is registered in the system:")
+    public void the_course_with_title_something_is_registered_in_the_system(String coursetitle) {
+        Unirest.post("/projects")
+        .body("{\"title\":\"" + coursetitle+"\"}")
+        .asJson();
+    }
+
+    @And("that the todos with title {string} being a task of {string}")
+    public void that_the_todos_with_title_something_being_a_task_of_something(String todotitle, String coursetitle) {
+
+        Unirest.post("/projects")
+        .body("{\"title\":\"" + coursetitle+"\"}")
+        .asJson();
+        Unirest.post("/projects"+findProjectByName(coursetitle).getInt("id")+"/tasks").body("{\"title\":\"" + todotitle+"}");
+
+    }
+
+    @When("user requests to delete the course with title {string}")
+    public void user_requests_to_delete_the_course_with_title_something(String coursetitle) {
+        JSONObject course = findProjectByName(coursetitle);
+        int id = course.getInt("id");
+        Unirest.delete("/projects/"+id).header("Content-Type", "application/json").asJson();
+        
+    }
+
+    @When("user requests to delete todos task of {string}")
+    public void user_requests_to_delete_todos_task_of_something(String coursettitle) {
+        the_students_requests_to_delete_all_tasks_from(coursettitle);
+    }
+
+    @When("user requests to delete a course with title {string}")
+    public void user_requests_to_delete_a_course_with_title_something(String invalidtitle) {
+        response= Unirest.delete("/projects/-1").asJson().getBody().getObject();
+    }
+
+    @Then("the course with title {string} should be removed from the system")
+    public void the_course_with_title_something_should_be_removed_from_the_system(String coursetitle) {
+        assertEquals(null, findProjectByName(coursetitle));
+    }
+
+    @Then("the todos task of {string} should be removed")
+    public void the_todos_task_of_something_should_be_removed(String coursettitle){
+        assertEquals(0, getProjectTasks(coursettitle).length());
+    }
+
+    @Then("^the system should output an error$")
+    public void the_system_should_output_an_errormessage(){
+        errorMessage = response.getJSONArray("errorMessages").getString(0);
+        assertEquals(errorMessage, "Could not find any instances with projects/-1");
+    }
+
 }
