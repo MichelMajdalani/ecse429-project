@@ -1,4 +1,4 @@
-package ecse429.group7;
+package ecse429.group7.acceptance;
 
 import io.cucumber.junit.Cucumber;
 import io.cucumber.junit.CucumberOptions;

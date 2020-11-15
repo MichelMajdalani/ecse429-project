@@ -1,4 +1,4 @@
-package ecse429.group7;
+package ecse429.group7.unit;
 
 import ecse429.group7.BaseTest;
 
@@ -6,7 +6,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-import org.junit.BeforeClass;
 
 import kong.unirest.Unirest;
 import kong.unirest.HttpResponse;
