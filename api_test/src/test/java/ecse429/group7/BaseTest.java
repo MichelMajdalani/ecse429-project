@@ -16,6 +16,7 @@ import kong.unirest.JsonNode;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.concurrent.*;
 
 
 public class BaseTest {
@@ -24,6 +25,7 @@ public class BaseTest {
     protected static final int STATUS_CODE_CREATED = 201;
     protected static final int STATUS_CODE_BAD_REQUEST = 400;
     protected static final int STATUS_CODE_NOT_FOUND = 404;
+    private static final int TIME_OUT = 5000;
     private static Process serverProcess;
 
     @BeforeClass
@@ -38,6 +40,29 @@ public class BaseTest {
     }
 
     public static void startServer() {
+        boolean success = false;
+        final ExecutorService service = Executors.newSingleThreadExecutor();
+        try {
+            final Future<Boolean> f = service.submit(new Callable<Boolean>() {
+                @Override
+                public Boolean call() {
+                    startServerUntimed();
+                    return true;
+                }
+            });
+            success = f.get(TIME_OUT, TimeUnit.MILLISECONDS);
+        } catch (Exception ignored) { } finally {
+            if (!success) {
+                if (serverProcess != null) {
+                    serverProcess.destroy();
+                }
+                System.out.println("Failed to start server -- exiting program");
+                System.exit(-1);
+            }
+        }
+    }
+
+    public static void startServerUntimed() {
         try {
             ProcessBuilder pb = new ProcessBuilder("java", "-jar", "../runTodoManagerRestAPI-1.5.5.jar");
             if (serverProcess != null) {
