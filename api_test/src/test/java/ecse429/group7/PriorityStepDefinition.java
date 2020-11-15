@@ -21,6 +21,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.google.gson.JsonObject;
+
 public class PriorityStepDefinition extends BaseTest {
 
     String errorMessage;
@@ -531,9 +533,11 @@ public class PriorityStepDefinition extends BaseTest {
 
     @Given("the course with title {string} is registered in the system:")
     public void the_course_with_title_something_is_registered_in_the_system(String coursetitle) {
-        Unirest.post("/projects")
+        HttpResponse<JsonNode> gResponse = Unirest.post("/projects")
         .body("{\"title\":\"" + coursetitle+"\"}")
         .asJson();
+        response= gResponse.getBody().getObject();
+        statusCode = gResponse.getStatus();
     }
 
     @And("that the todos with title {string} being a task of {string}")
@@ -579,5 +583,59 @@ public class PriorityStepDefinition extends BaseTest {
         errorMessage = response.getJSONArray("errorMessages").getString(0);
         assertEquals(errorMessage, "Could not find any instances with projects/-1");
     }
+
+    //ID005
+
+    @Given("the course with {string} is not in the system:")
+    public void the_course_with_something_is_not_in_the_system(String coursetitle) {
+        assertEquals(null, findProjectByName(coursetitle));
+    }
+
+    @Given("the course with title {string}, active status {string} is registered in the system:")
+    public void the_course_with_title_something_active_status_something_is_registered_in_the_system(String coursetitle, String oldactive){
+        Unirest.post("/projects")
+        .body("{\"title\":\""+coursetitle+"\",\n"
+                +"\"active\":"+oldactive+"\n}")
+        .asJson();
+    }
+
+    // @Given("the course with title {string} already exists in the system:")
+    // public void the_course_with_title_something_already_exists_in_the_system(String coursetitle) {
+    //     the_course_with_title_something_is_registered_in_the_system(coursetitle);
+    // }
+
+    @When("user requests to create a course with title {string} and description {string}")
+    public void user_requests_to_create_a_course_with_title_something_and_description_something(String coursetitle, String coursedescription){
+        HttpResponse<JsonNode> gResponse = Unirest.post("/projects")
+        .body("{\"title\":"+"\""+coursetitle+"\",\n"
+            +"\"description\":\""+coursedescription+"\"\n}")
+            .asJson();
+        response= gResponse.getBody().getObject();
+        statusCode = gResponse.getStatus();
+    }
+    @When("user requests to set the the active status of the course with title {string} to {string}")
+    public void user_requests_to_set_the_the_active_status_of_the_course_with_title_something_to_something(String coursetitle, String newactive) {
+        int courseId = findProjectByName(coursetitle).getInt("id");
+        Unirest.put("/projects/"+courseId)
+        .body("{\"title\":\""+coursetitle+"\",\n"
+            +"\"active\":"+newactive+"\n}")
+        .asJson();
+    }
+
+    @Then("the course with title {string} and description {string} should be created:")
+    public void the_course_with_title_something_and_description_something_should_be_created(String coursetitle, String coursedescription) {
+        assertEquals(201, statusCode);
+    }
+
+    @Then("the active status of the course with title {string} should be set to {string}")
+    public void the_active_status_of_the_course_with_title_something_should_be_set_to_something(String coursetitle, String newactive){
+        JSONObject course = findProjectByName(coursetitle);
+        assertEquals(newactive, course.getString("active"));
+
+    }
+    // @Then("the system should output an error message")
+    // public void the_system_should_output_an_error_message() {
+    //     throw new PendingException();
+    // }
 
 }
