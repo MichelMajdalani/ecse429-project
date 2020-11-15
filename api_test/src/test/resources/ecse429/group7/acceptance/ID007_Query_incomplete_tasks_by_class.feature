@@ -4,7 +4,8 @@ I query the incomplete tasks for a class I am taking,
 to help manage my time.
 
   Background:
-    Given the following projects exist on the system
+    Given the API server is running 
+      And the following projects exist on the system
       | title    | completed | active | description            |
       | ECSE 429 | false     | true   | Software validiation   |
       | ECSE 444 | true      | false  | Microprocessors        |

@@ -1,5 +1,6 @@
-package ecse429.group7;
+package ecse429.group7.unit;
 
+import ecse429.group7.BaseTest;
 import kong.unirest.UnirestException;
 
 import org.junit.Test;

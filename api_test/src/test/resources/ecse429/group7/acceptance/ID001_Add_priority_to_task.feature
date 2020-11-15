@@ -3,8 +3,9 @@ As a student
 I categorize tasks as HIGH, MEDIUM or LOW priority
 So I can better manage my time
 
-  Background: 
-    Given the following categories are registered in the todoManagerRestAPI system:
+  Background:
+    Given the API server is running 
+      And the following categories are registered in the todoManagerRestAPI system:
       | title  | description          | 
       | HIGH   | High Priority Task   | 
       | MEDIUM | Medium Priority Task | 
