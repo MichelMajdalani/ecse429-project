@@ -28,13 +28,13 @@ so I can manage course work.
       | ECSE 415    | false     | true      | false     | Computer Vision                | 
       | COMP 251    | true      | false     | true      | Data Structures and Algorithms | 
   
-  # Scenario Outline: Creating a course that already exists (Error Flow)
-  #   Given the course with title "<courseTitle>" already exists in the system:
-  #    When user requests to create a course with title "<courseTitle>"
-  #    Then the system should output an error message
+  Scenario Outline: Creating a course with a non-existing completed status (Error Flow)
+    Given  the course with "<courseTitle>" is not in the system:
+     When user requests to create a course with title "<courseTitle>" and completed status "<completed>"
+     Then the system should output an error code "<code>"
   
-  #   Examples: 
-  #     | courseTitle | completed | oldActive | newActive | courseDescription   | code | 
-  #     | ECSE 429    | false     | true      | false     | Software Validation | 201  | 
-  #     | ECSE 429    | false     | true      | false     | Software Validation | 400  | 
+    Examples: 
+      | courseTitle | completed    |  courseDescription   | code | 
+      | ECSE 429    | ongoing      |  Software Validation | 400  | 
+      | ECSE 429    | not finished |  Software Validation | 400  | 
   

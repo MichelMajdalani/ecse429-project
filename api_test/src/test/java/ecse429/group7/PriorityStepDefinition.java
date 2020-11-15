@@ -599,10 +599,6 @@ public class PriorityStepDefinition extends BaseTest {
         .asJson();
     }
 
-    // @Given("the course with title {string} already exists in the system:")
-    // public void the_course_with_title_something_already_exists_in_the_system(String coursetitle) {
-    //     the_course_with_title_something_is_registered_in_the_system(coursetitle);
-    // }
 
     @When("user requests to create a course with title {string} and description {string}")
     public void user_requests_to_create_a_course_with_title_something_and_description_something(String coursetitle, String coursedescription){
@@ -622,6 +618,15 @@ public class PriorityStepDefinition extends BaseTest {
         .asJson();
     }
 
+    @When("user requests to create a course with title {string} and completed status {string}")
+    public void user_requests_to_create_a_course_with_title_something_and_completed_status_something(String coursetitle, String completed) {
+        HttpResponse<JsonNode> gResponse = Unirest.post("/projects")
+        .body("{\"title\":\""+coursetitle+"\",\n"
+            +"\"completed\":"+completed+"\n}")
+        .asJson();
+        statusCode = gResponse.getStatus();
+    }
+
     @Then("the course with title {string} and description {string} should be created:")
     public void the_course_with_title_something_and_description_something_should_be_created(String coursetitle, String coursedescription) {
         assertEquals(201, statusCode);
@@ -633,10 +638,6 @@ public class PriorityStepDefinition extends BaseTest {
         assertEquals(newactive, course.getString("active"));
 
     }
-    // @Then("the system should output an error message")
-    // public void the_system_should_output_an_error_message() {
-    //     throw new PendingException();
-    // }
 
     //ID002 
     @Given("the todo with name {string} and description {string} is registered in the system:")
