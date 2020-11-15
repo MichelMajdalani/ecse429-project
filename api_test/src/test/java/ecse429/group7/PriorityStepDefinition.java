@@ -21,6 +21,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.google.gson.JsonObject;
+
 public class PriorityStepDefinition extends BaseTest {
 
     String errorMessage;
@@ -529,4 +531,170 @@ public class PriorityStepDefinition extends BaseTest {
         assertEquals(Integer.parseInt(statuscode), statusCode);
     }
 
+    // ID 6: Remove todolist for class
+
+    @Given("the course with title {string} is registered in the system:")
+    public void the_course_with_title_something_is_registered_in_the_system(String coursetitle) {
+        HttpResponse<JsonNode> gResponse = Unirest.post("/projects")
+        .body("{\"title\":\"" + coursetitle+"\"}")
+        .asJson();
+        response= gResponse.getBody().getObject();
+        statusCode = gResponse.getStatus();
+    }
+
+    @And("that the todos with title {string} being a task of {string}")
+    public void that_the_todos_with_title_something_being_a_task_of_something(String todotitle, String coursetitle) {
+
+        Unirest.post("/projects")
+        .body("{\"title\":\"" + coursetitle+"\"}")
+        .asJson();
+        Unirest.post("/projects"+findProjectByName(coursetitle).getInt("id")+"/tasks").body("{\"title\":\"" + todotitle+"\"}").asJson();
+
+    }
+
+    @When("user requests to delete the course with title {string}")
+    public void user_requests_to_delete_the_course_with_title_something(String coursetitle) {
+        JSONObject course = findProjectByName(coursetitle);
+        int id = course.getInt("id");
+        Unirest.delete("/projects/"+id).header("Content-Type", "application/json").asJson();
+        
+    }
+
+    @When("user requests to delete todos task of {string}")
+    public void user_requests_to_delete_todos_task_of_something(String coursettitle) {
+        the_students_requests_to_delete_all_tasks_from(coursettitle);
+    }
+
+    @When("user requests to delete a course with title {string}")
+    public void user_requests_to_delete_a_course_with_title_something(String invalidtitle) {
+        response= Unirest.delete("/projects/-1").asJson().getBody().getObject();
+    }
+
+    @Then("the course with title {string} should be removed from the system")
+    public void the_course_with_title_something_should_be_removed_from_the_system(String coursetitle) {
+        assertEquals(null, findProjectByName(coursetitle));
+    }
+
+    @Then("the todos task of {string} should be removed")
+    public void the_todos_task_of_something_should_be_removed(String coursettitle){
+        assertEquals(0, getProjectTasks(coursettitle).length());
+    }
+
+    @Then("^the system should output an error$")
+    public void the_system_should_output_an_errormessage(){
+        errorMessage = response.getJSONArray("errorMessages").getString(0);
+        assertEquals(errorMessage, "Could not find any instances with projects/-1");
+    }
+
+    //ID005
+
+    @Given("the course with {string} is not in the system:")
+    public void the_course_with_something_is_not_in_the_system(String coursetitle) {
+        assertEquals(null, findProjectByName(coursetitle));
+    }
+
+    @Given("the course with title {string}, active status {string} is registered in the system:")
+    public void the_course_with_title_something_active_status_something_is_registered_in_the_system(String coursetitle, String oldactive){
+        Unirest.post("/projects")
+        .body("{\"title\":\""+coursetitle+"\",\n"
+                +"\"active\":"+oldactive+"\n}")
+        .asJson();
+    }
+
+
+    @When("user requests to create a course with title {string} and description {string}")
+    public void user_requests_to_create_a_course_with_title_something_and_description_something(String coursetitle, String coursedescription){
+        HttpResponse<JsonNode> gResponse = Unirest.post("/projects")
+        .body("{\"title\":"+"\""+coursetitle+"\",\n"
+            +"\"description\":\""+coursedescription+"\"\n}")
+            .asJson();
+        response= gResponse.getBody().getObject();
+        statusCode = gResponse.getStatus();
+    }
+    @When("user requests to set the the active status of the course with title {string} to {string}")
+    public void user_requests_to_set_the_the_active_status_of_the_course_with_title_something_to_something(String coursetitle, String newactive) {
+        int courseId = findProjectByName(coursetitle).getInt("id");
+        Unirest.put("/projects/"+courseId)
+        .body("{\"title\":\""+coursetitle+"\",\n"
+            +"\"active\":"+newactive+"\n}")
+        .asJson();
+    }
+
+    @When("user requests to create a course with title {string} and completed status {string}")
+    public void user_requests_to_create_a_course_with_title_something_and_completed_status_something(String coursetitle, String completed) {
+        HttpResponse<JsonNode> gResponse = Unirest.post("/projects")
+        .body("{\"title\":\""+coursetitle+"\",\n"
+            +"\"completed\":"+completed+"\n}")
+        .asJson();
+        statusCode = gResponse.getStatus();
+    }
+
+    @Then("the course with title {string} and description {string} should be created:")
+    public void the_course_with_title_something_and_description_something_should_be_created(String coursetitle, String coursedescription) {
+        assertEquals(201, statusCode);
+    }
+
+    @Then("the active status of the course with title {string} should be set to {string}")
+    public void the_active_status_of_the_course_with_title_something_should_be_set_to_something(String coursetitle, String newactive){
+        JSONObject course = findProjectByName(coursetitle);
+        assertEquals(newactive, course.getString("active"));
+
+    }
+
+    //ID002 
+    @Given("the todo with name {string} and description {string} is registered in the system:")
+    public void the_todo_with_name_something_and_description_something_is_registered_in_the_system(String todotitle, String tododescription){
+        Unirest.post("/todos")
+        .body("{\"title\":\"" + todotitle + "\",\n\"description\":\"" + tododescription+ "\"\n}")
+        .asJson();
+    }
+
+    @Given("the todo with name {string} is registered in the system:")
+    public void the_todo_with_name_something_is_registered_in_the_system(String todotitle) {
+        Unirest.post("/todos")
+        .body("{\"title\":\"" + todotitle + "\"}")
+        .asJson();
+    }
+
+    @When("the user requests to add the todo with name {string} and description {string} to the course with title {string}")
+    public void the_user_requests_to_add_the_todo_with_name_something_and_description_something_to_the_course_with_title_something(String todotitle, String tododescription, String coursetitle){
+        int todoId= findIdFromTodoName(todotitle);
+        Unirest.post("/todos/"+todoId+"/tasksof").body("{\"title\":\"" + coursetitle + "\"}").asJson();
+    }
+
+    @When("the user requests to add the course with {string} to the system:")
+    public void the_user_requests_to_add_the_course_with_something_to_the_system(String coursetitle){
+        the_course_with_title_something_is_registered_in_the_system(coursetitle);
+    }
+
+    @When("user requests to add the todo with name {string} to the project title {string}")
+    public void user_requests_to_add_the_todo_with_name_something_to_the_project_title_something(String todotitle, String inavlidcoursettitle){
+        JSONObject course= findProjectByName(inavlidcoursettitle);
+        if(course==null){
+            statusCode = Unirest.get("/projects/-1").asJson().getStatus();
+        }
+
+    }
+
+    @Then("the todo with name {string} should be added to the todo list of the course with title {string}")
+    public void the_todo_with_name_something_should_be_added_to_the_todo_list_of_the_course_with_title_something(String todotitle, String coursetitle){
+        assertEquals(1, getProjectTasks(coursetitle).length());
+    }
+
+    @Then("the system should output an error code {string}")
+    public void the_system_should_output_an_error_code_something(String errorcode) {
+        assertEquals(Integer.parseInt(errorcode),statusCode);
+    }
+
+    @And("the user requests to add the todo with name {string} and description {string} to the course {string}")
+    public void the_user_requests_to_add_the_todo_with_name_something_and_description_something_to_the_course_something(String todotitle, String tododescription, String coursetitle){
+        Unirest.post("/projects/"+findProjectByName(coursetitle).getInt("id")+"/tasks").body("{\"title\":\"" + todotitle+"\"}").asJson();
+    }
+
+    @And("the only course in the database is the course with title {string}")
+    public void the_only_course_in_the_database_is_the_course_with_title_something(String coursetitle){
+        the_course_with_title_something_is_registered_in_the_system(coursetitle);
+        int length = Unirest.get("/projects").asJson().getBody().getObject().getJSONArray("projects").length();
+        assertEquals(2, length); // 2 because there is already one to begin with
+    }
 }
