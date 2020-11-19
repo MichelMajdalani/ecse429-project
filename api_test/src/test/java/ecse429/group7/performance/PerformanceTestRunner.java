@@ -17,54 +17,70 @@ public class PerformanceTestRunner extends BaseTest {
 
     private static final GenericPerformanceTest CATEGORIES_TESTER = new GenericPerformanceTest("categories") {
         @Override
-        public void addRandom() {
+        public String addRandom() {
+            String title = getRandomString();
             HttpResponse<JsonNode> response = Unirest.post("/categories").header("Content-Type", "application/json").body(
-                    "{\n   \"title\":\"" + getRandomString() + "\",\n \"description\":\"" + getRandomString() + "\"\n}\n")
+                    "{\n   \"title\":\"" + title + "\",\n \"description\":\"" + getRandomString() + "\"\n}\n")
                     .asJson();
+
             id_list.add(response.getBody().getObject().getInt("id"));
+            return title;
         }
 
         @Override
-        public void changeLast() {
+        public String changeLast() {
+            String title = getRandomString();
             Unirest.put("/categories/" + id_list.getLast()).header("Content-Type", "application/json").body(
-                    "{\n   \"title\":\"" + getRandomString() + "\",\n \"description\":\"" + getRandomString() + "\"\n}\n")
+                    "{\n   \"title\":\"" + title + "\",\n \"description\":\"" + getRandomString() + "\"\n}\n")
                     .asJson();
+            
+            return title;
         }
     };
     private static final GenericPerformanceTest PROJECTS_TESTER = new GenericPerformanceTest("projects") {
         @Override
-        public void addRandom() {
+        public String addRandom() {
+            String title = getRandomString();
             HttpResponse<JsonNode> response = Unirest.post("/projects")
                     .body("{\n\"description\":\"" + getRandomString() + "\",\n    \"active\":" + getRandomBool()
-                            + ",\n    \"completed\":" + getRandomBool() + ",\n    \"title\":\"" + getRandomString()
+                            + ",\n    \"completed\":" + getRandomBool() + ",\n    \"title\":\"" + title
                             + "\"\n}")
                     .asJson();
 
             id_list.add(response.getBody().getObject().getInt("id"));
+            return title;
         }
 
         @Override
-        public void changeLast() {
+        public String changeLast() {
+            String title = getRandomString();
             Unirest.put("/projects/" + id_list.getLast())
                     .body("{\n\"description\":\"" + getRandomString() + "\",\n    \"active\":" + getRandomBool()
-                            + ",\n    \"completed\":" + getRandomBool() + ",\n    \"title\":\"" + getRandomString()
+                            + ",\n    \"completed\":" + getRandomBool() + ",\n    \"title\":\"" + title
                             + "\"\n}")
                     .asJson();
+
+            return title;
         }
     };
     private static final GenericPerformanceTest TODOS_TESTER = new GenericPerformanceTest("todos") {
         @Override
-        public void addRandom() {
-            HttpResponse<JsonNode> response = Unirest.post("/todos").body("{\"title\":\"" + getRandomString()
+        public String addRandom() {
+            String title = getRandomString();
+            HttpResponse<JsonNode> response = Unirest.post("/todos").body("{\"title\":\"" + title
                     + "\",\"doneStatus\":" + getRandomBool() + ",\"description\":\"" + getRandomString() + "\"}").asJson();
 
             id_list.add(response.getBody().getObject().getInt("id"));
+            return title;
         }
 
         @Override
-        public void changeLast() {
-            Unirest.put("/todos/" + id_list.getLast()).body("{\"title\":\"" + getRandomString()
+        public String changeLast() {
+            String title = getRandomString();
+            Unirest.put("/todos/" + id_list.getLast()).body("{\"title\":\"" + title
                     + "\",\"doneStatus\":" + getRandomBool() + ",\"description\":\"" + getRandomString() + "\"}").asJson();
+            
+            return title;
         }
     };
 
@@ -102,6 +118,6 @@ public class PerformanceTestRunner extends BaseTest {
 
     @Test
     public void testChange() {
-        tester.timeAdd(num);
+        tester.timeChange(num);
     }
 }
