@@ -5,9 +5,47 @@ import org.junit.Test;
 import kong.unirest.Unirest;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+import java.util.Arrays;
+import java.util.Collection;
+
+@RunWith(Parameterized.class)
 public class TestCategoryPerformance extends BasePerformanceTest {
-    
+
+    @Parameterized.Parameters(name = "{0} categories")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+                {10}, {50}, {100}, {250}, {500}, {1000}
+        });
+    }
+
+    private final int num_categories;
+
+    public TestCategoryPerformance(int num) {
+        num_categories = num;
+    }
+
+    @Test
+    public void testCategoriesAdd() {
+        testManyCategoriesAddTime(num_categories);
+    }
+
+    @Test
+    public void testCategoriesRemove()
+    {
+        testManyCategoriesDeleteTime(num_categories);
+    }
+
+    @Test
+    public void testCategoriesChange() {
+        testManyCategoriesChangeTime(num_categories);
+    }
+
+
+
+
     public void addRandomCategory()
     {
         HttpResponse<JsonNode> response = Unirest.post("/categories").header("Content-Type", "application/json").body(
@@ -98,113 +136,5 @@ public class TestCategoryPerformance extends BasePerformanceTest {
         System.out.println("Test Change Category with " + number_categories + " Categories in Server:");
         System.out.println("\tTotal Test Time: " + (finish_whole - start_whole) + " ns");
         System.out.println("\tSingle Category Change Time: " + (finish_single - start_single) + " ns");
-    }
-
-    @Test
-    public void test10CategoriesAdd()
-    {
-        testManyCategoriesAddTime(10);
-    }
-
-    @Test
-    public void test50CategoriesAdd()
-    {
-        testManyCategoriesAddTime(50);
-    }
-
-    @Test
-    public void test100CategoriesAdd()
-    {
-        testManyCategoriesAddTime(100);
-    }
-
-    @Test
-    public void test250CategoriesAdd()
-    {
-        testManyCategoriesAddTime(250);
-    }
-
-    @Test
-    public void test500CategoriesAdd()
-    {
-        testManyCategoriesAddTime(500);
-    }
-
-    @Test
-    public void test1000CategoriesAdd()
-    {
-        testManyCategoriesAddTime(1000);
-    }
-
-    @Test
-    public void test10CategoriesRemove()
-    {
-        testManyCategoriesDeleteTime(10);
-    }
-
-    @Test
-    public void test50CategoriesRemove()
-    {
-        testManyCategoriesDeleteTime(50);
-    }
-
-    @Test
-    public void test100CategoriesRemove()
-    {
-        testManyCategoriesDeleteTime(100);
-    }
-
-    @Test
-    public void test250CategoriesRemove()
-    {
-        testManyCategoriesDeleteTime(250);
-    }
-
-    @Test
-    public void test500CategoriesRemove()
-    {
-        testManyCategoriesDeleteTime(500);
-    }
-
-    @Test
-    public void test1000CategoriesRemove()
-    {
-        testManyCategoriesDeleteTime(1000);
-    }
-
-    @Test
-    public void test10CategoriesChange()
-    {
-        testManyCategoriesChangeTime(10);
-    }
-
-    @Test
-    public void test50CategoriesChange()
-    {
-        testManyCategoriesChangeTime(50);
-    }
-
-    @Test
-    public void test100CategoriesChange()
-    {
-        testManyCategoriesChangeTime(100);
-    }
-
-    @Test
-    public void test250CategoriesChange()
-    {
-        testManyCategoriesChangeTime(250);
-    }
-
-    @Test
-    public void test500CategoriesChange()
-    {
-        testManyCategoriesChangeTime(500);
-    }
-
-    @Test
-    public void test1000CategoriesChange()
-    {
-        testManyCategoriesChangeTime(1000);
     }
 }
