@@ -1,18 +1,14 @@
 package ecse429.group7.performance;
 
-import ecse429.group7.BaseTest;
-
 import java.util.LinkedList;
 import java.util.Random;
 
+import ecse429.group7.BaseTest;
 import org.apache.commons.text.RandomStringGenerator;
 
-import org.junit.After;
 import org.junit.Before;
 
 import kong.unirest.Unirest;
-import kong.unirest.HttpResponse;
-import kong.unirest.JsonNode;
 
 public class BasePerformanceTest extends BaseTest {
 
@@ -24,9 +20,9 @@ public class BasePerformanceTest extends BaseTest {
 
     @Before
     public void before() {
-        task_id_list = new LinkedList<Integer>();
-        project_id_list = new LinkedList<Integer>();
-        category_id_list = new LinkedList<Integer>();
+        task_id_list = new LinkedList<>();
+        project_id_list = new LinkedList<>();
+        category_id_list = new LinkedList<>();
         string_generator = new RandomStringGenerator.Builder()
                 .withinRange('a', 'z').build();
         number_generator = new Random();
