@@ -39,7 +39,7 @@ public class BasePerformanceTest extends BaseTest {
 
     public String getRandomBool()
     {
-        return number_generator.nextInt(2) % 2 == 0 ? "true" : "false";
+        return "" + number_generator.nextBoolean();
     }
 
     public void resetState()
