@@ -1,8 +1,6 @@
 package ecse429.group7;
 
 import kong.unirest.UnirestException;
-import kong.unirest.json.JSONArray;
-import kong.unirest.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
