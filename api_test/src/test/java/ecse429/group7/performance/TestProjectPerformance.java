@@ -5,9 +5,45 @@ import org.junit.Test;
 import kong.unirest.Unirest;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+import java.util.Arrays;
+import java.util.Collection;
+
+@RunWith(Parameterized.class)
 public class TestProjectPerformance extends BasePerformanceTest {
-    
+
+    private final int num_projects;
+
+    @Parameterized.Parameters(name = "{0} projects")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+                {10}, {50}, {100}, {250}, {500}, {1000}
+        });
+    }
+
+    public TestProjectPerformance(int num) {
+        num_projects = num;
+    }
+
+    @Test
+    public void testProjectsAdd() {
+        testManyProjectsAddTime(num_projects);
+    }
+
+    @Test
+    public void testProjectsRemove() {
+        testManyProjectDeleteTime(num_projects);
+    }
+
+    @Test
+    public void testProjectsChange() {
+        testManyProjectChangeTime(num_projects);
+    }
+
+
+
     public void addRandomProject()
     {
         HttpResponse<JsonNode> response = Unirest.post("/projects")
@@ -102,113 +138,5 @@ public class TestProjectPerformance extends BasePerformanceTest {
         System.out.println("Test Change Projects with " + number_projects + " Projects in Server:");
         System.out.println("\tTotal Test Time: " + (finish_whole - start_whole) + " ns");
         System.out.println("\tSingle Project Change Time: " + (finish_single - start_single) + " ns");
-    }
-
-    @Test
-    public void test10ProjectsAdd()
-    {
-        testManyProjectsAddTime(10);
-    }
-
-    @Test
-    public void test50ProjectsAdd()
-    {
-        testManyProjectsAddTime(50);
-    }
-
-    @Test
-    public void test100ProjectsAdd()
-    {
-        testManyProjectsAddTime(100);
-    }
-
-    @Test
-    public void test250ProjectsAdd()
-    {
-        testManyProjectsAddTime(250);
-    }
-
-    @Test
-    public void test500ProjectsAdd()
-    {
-        testManyProjectsAddTime(500);
-    }
-
-    @Test
-    public void test1000ProjectsAdd()
-    {
-        testManyProjectsAddTime(1000);
-    }
-
-    @Test
-    public void test10ProjectsRemove()
-    {
-        testManyProjectDeleteTime(10);
-    }
-
-    @Test
-    public void test50ProjectsRemove()
-    {
-        testManyProjectDeleteTime(50);
-    }
-
-    @Test
-    public void test100ProjectsRemove()
-    {
-        testManyProjectDeleteTime(100);
-    }
-
-    @Test
-    public void test250ProjectsRemove()
-    {
-        testManyProjectDeleteTime(250);
-    }
-
-    @Test
-    public void test500ProjectsRemove()
-    {
-        testManyProjectDeleteTime(500);
-    }
-
-    @Test
-    public void test1000ProjectsRemove()
-    {
-        testManyProjectDeleteTime(1000);
-    }
-
-    @Test
-    public void test10ProjectsChange()
-    {
-        testManyProjectChangeTime(10);
-    }
-
-    @Test
-    public void test50ProjectsChange()
-    {
-        testManyProjectChangeTime(50);
-    }
-
-    @Test
-    public void test100ProjectsChange()
-    {
-        testManyProjectChangeTime(100);
-    }
-
-    @Test
-    public void test250ProjectsChange()
-    {
-        testManyProjectChangeTime(250);
-    }
-
-    @Test
-    public void test500ProjectsChange()
-    {
-        testManyProjectChangeTime(500);
-    }
-
-    @Test
-    public void test1000ProjectsChange()
-    {
-        testManyProjectChangeTime(1000);
     }
 }

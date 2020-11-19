@@ -5,11 +5,46 @@ import org.junit.Test;
 import kong.unirest.Unirest;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+import java.util.Arrays;
+import java.util.Collection;
+
+@RunWith(Parameterized.class)
 public class TestTodoPerformance extends BasePerformanceTest {
-    
-    public void addRandomTodo()
-    {
+
+    private final int number_todos;
+
+    @Parameterized.Parameters(name = "{0} todos")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+                {10}, {50}, {100}, {250}, {500}, {1000}
+        });
+    }
+
+    @Test
+    public void testTodosAdd() {
+        testManyTodosAddTime(number_todos);
+    }
+
+    @Test
+    public void testTodosRemove() {
+        testManyTodosRemoveTime(number_todos);
+    }
+    @Test
+    public void testTodosChange() {
+        testManyTodosChangeTime(number_todos);
+    }
+
+
+
+
+    public TestTodoPerformance(int num) {
+        number_todos = num;
+    }
+
+    public void addRandomTodo() {
         HttpResponse<JsonNode> response = Unirest.post("/todos").body("{\"title\":\"" + getRandomString()
                 + "\",\"doneStatus\":" + getRandomBool() + ",\"description\":\"" + getRandomString() + "\"}").asJson();
 
@@ -96,113 +131,5 @@ public class TestTodoPerformance extends BasePerformanceTest {
         System.out.println("Test Change Todo with " + number_todos + " Todos in Server:");
         System.out.println("\tTotal Test Time: " + (finish_whole - start_whole) + " ns");
         System.out.println("\tSingle Todo Change Time: " + (finish_single - start_single) + " ns");
-    }
-
-    @Test
-    public void test10TodosAdd()
-    {
-        testManyTodosAddTime(10);
-    }
-
-    @Test
-    public void test50TodosAdd()
-    {
-        testManyTodosAddTime(50);
-    }
-
-    @Test
-    public void test100TodosAdd()
-    {
-        testManyTodosAddTime(100);
-    }
-
-    @Test
-    public void test250TodosAdd()
-    {
-        testManyTodosAddTime(250);
-    }
-
-    @Test
-    public void test500TodosAdd()
-    {
-        testManyTodosAddTime(500);
-    }
-
-    @Test
-    public void test1000TodosAdd()
-    {
-        testManyTodosAddTime(1000);
-    }
-
-    @Test
-    public void test10TodosRemove()
-    {
-        testManyTodosRemoveTime(10);
-    }
-
-    @Test
-    public void test50TodosRemove()
-    {
-        testManyTodosRemoveTime(50);
-    }
-
-    @Test
-    public void test100TodosRemove()
-    {
-        testManyTodosRemoveTime(100);
-    }
-
-    @Test
-    public void test250TodosRemove()
-    {
-        testManyTodosRemoveTime(250);
-    }
-
-    @Test
-    public void test500TodosRemove()
-    {
-        testManyTodosRemoveTime(500);
-    }
-
-    @Test
-    public void test1000TodosRemove()
-    {
-        testManyTodosRemoveTime(1000);
-    }
-
-    @Test
-    public void test10TodosChange()
-    {
-        testManyTodosChangeTime(10);
-    }
-
-    @Test
-    public void test50TodosChange()
-    {
-        testManyTodosChangeTime(50);
-    }
-
-    @Test
-    public void test100TodosChange()
-    {
-        testManyTodosChangeTime(100);
-    }
-
-    @Test
-    public void test250TodosChange()
-    {
-        testManyTodosChangeTime(250);
-    }
-
-    @Test
-    public void test500TodosChange()
-    {
-        testManyTodosChangeTime(500);
-    }
-
-    @Test
-    public void test1000TodosChange()
-    {
-        testManyTodosChangeTime(1000);
     }
 }
