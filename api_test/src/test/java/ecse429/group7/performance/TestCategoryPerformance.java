@@ -19,7 +19,7 @@ public class TestCategoryPerformance extends BasePerformanceTest {
     
     public void removeLastCategory()
     {
-        Unirest.delete("/categories/" + category_id_list.getLast()).header("Content-Type", "application/json").asJson();
+        Unirest.delete("/categories/" + category_id_list.removeLast()).header("Content-Type", "application/json").asJson();
         category_id_list.removeLast();
     }
     
