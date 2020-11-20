@@ -6,6 +6,7 @@ import org.apache.commons.text.RandomStringGenerator;
 import java.util.LinkedList;
 import java.util.Random;
 
+import static ecse429.group7.performance.CSVWriter.addLine;
 import static org.junit.Assert.assertEquals;
 
 public abstract class GenericPerformanceTest {
@@ -105,6 +106,10 @@ public abstract class GenericPerformanceTest {
         resetState();
 
         long finish_whole = System.nanoTime();
+        addLine(new String[] {
+                type, num+"", t.toString(),
+                (finish_whole - start_whole) + "", (finish_single - start_single)+""
+        });
         System.out.println("Test " + t.toString() + " " + type + " with " + num + " of them in Server:");
         System.out.println("\tTotal Test Time: " + (finish_whole - start_whole) + " ns");
         System.out.println("\tSingle " + type + " Add Time: " + (finish_single - start_single) + " ns");
