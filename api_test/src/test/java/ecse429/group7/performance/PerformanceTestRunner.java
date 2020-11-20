@@ -15,6 +15,44 @@ import java.util.Collection;
 @RunWith(Parameterized.class)
 public class PerformanceTestRunner extends BaseTest {
 
+    private final int num;
+    private final GenericPerformanceTest tester;
+
+    public PerformanceTestRunner(int num, String name, GenericPerformanceTest tester) {
+        this.num = num;
+        this.tester = tester;
+    }
+
+    @Test
+    public void testAdd() {
+        tester.timeAdd(num);
+    }
+
+    @Test
+    public void testRemove() {
+        tester.timeRemove(num);
+    }
+
+    @Test
+    public void testChange() {
+        tester.timeChange(num);
+    }
+
+
+    @Parameterized.Parameters(name = "{0} {1}")
+    public static Collection<Object[]> data() {
+        int[] sizeOpts = {10, 50, 100, 250, 500, 1000};
+        String[] nameOpts = {"categories", "projects", "todos"};
+        GenericPerformanceTest[] testers = {CATEGORIES_TESTER, PROJECTS_TESTER, TODOS_TESTER};
+        ArrayList<Object[]> l = new ArrayList<>();
+        for (int n : sizeOpts) {
+            for (int j = 0; j < nameOpts.length; j++) {
+                l.add(new Object[]{n, nameOpts[j], testers[j]});
+            }
+        }
+        return l;
+    }
+
     private static final GenericPerformanceTest CATEGORIES_TESTER = new GenericPerformanceTest("categories") {
         @Override
         public String addRandom() {
@@ -33,7 +71,7 @@ public class PerformanceTestRunner extends BaseTest {
             Unirest.put("/categories/" + id_list.getLast()).header("Content-Type", "application/json").body(
                     "{\n   \"title\":\"" + title + "\",\n \"description\":\"" + getRandomString() + "\"\n}\n")
                     .asJson();
-            
+
             return title;
         }
     };
@@ -79,45 +117,9 @@ public class PerformanceTestRunner extends BaseTest {
             String title = getRandomString();
             Unirest.put("/todos/" + id_list.getLast()).body("{\"title\":\"" + title
                     + "\",\"doneStatus\":" + getRandomBool() + ",\"description\":\"" + getRandomString() + "\"}").asJson();
-            
+
             return title;
         }
     };
 
-    private final int num;
-    private final GenericPerformanceTest tester;
-
-    @Parameterized.Parameters(name = "{0} {1}")
-    public static Collection<Object[]> data() {
-        int[] sizeOpts = {10, 50, 100, 250, 500, 1000};
-        String[] nameOpts = {"categories", "projects", "todos"};
-        GenericPerformanceTest[] testers = {CATEGORIES_TESTER, PROJECTS_TESTER, TODOS_TESTER};
-        ArrayList<Object[]> l = new ArrayList<>();
-        for (int n : sizeOpts) {
-            for (int j = 0; j < nameOpts.length; j++) {
-                l.add(new Object[]{n, nameOpts[j], testers[j]});
-            }
-        }
-        return l;
-    }
-
-    public PerformanceTestRunner(int num, String name, GenericPerformanceTest tester) {
-        this.num = num;
-        this.tester = tester;
-    }
-
-    @Test
-    public void testAdd() {
-        tester.timeAdd(num);
-    }
-
-    @Test
-    public void testRemove() {
-        tester.timeRemove(num);
-    }
-
-    @Test
-    public void testChange() {
-        tester.timeChange(num);
-    }
 }
