@@ -45,8 +45,8 @@ public class PerformanceTestRunner extends BaseTest {
         String[] nameOpts = {"categories", "projects", "todos"};
         GenericPerformanceTest[] testers = {CATEGORIES_TESTER, PROJECTS_TESTER, TODOS_TESTER};
         ArrayList<Object[]> l = new ArrayList<>();
-        for (int n : sizeOpts) {
-            for (int j = 0; j < nameOpts.length; j++) {
+        for (int j = 0; j < nameOpts.length; j++) {
+            for (int n : sizeOpts) {
                 l.add(new Object[]{n, nameOpts[j], testers[j]});
             }
         }
