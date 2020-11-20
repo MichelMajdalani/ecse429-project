@@ -16,6 +16,7 @@ public abstract class GenericPerformanceTest {
     Random number_generator;
 
     public static final int STATIC_CODE_NOT_FOUND = 404;
+    public static final int NUM_SAMPLES = 50;
 
     private enum TaskType { ADD, CHANGE, REMOVE }
 
@@ -76,31 +77,47 @@ public abstract class GenericPerformanceTest {
 
         // Setup
         addMany(num);
+        long single_avg = 0;
 
-        // Add one category
-        long start_single = System.nanoTime();
+        // Perform operation
+        for (int i = 0; i < NUM_SAMPLES; i++) {
+            long start_single = System.nanoTime();
 
-        String title = "";
-        int id_deleted = 0;
+            String title = "";
+            int id_deleted = 0;
 
-        switch (t) {
-            case ADD: title = addRandom(); break;
-            case REMOVE: id_deleted = removeLast(); break;
-            case CHANGE: title = changeLast(); break;
+            switch (t) {
+                case ADD: title = addRandom(); break;
+                case REMOVE: id_deleted = removeLast(); break;
+                case CHANGE: title = changeLast(); break;
+            }
+            long finish_single = System.nanoTime();
+
+            single_avg += finish_single - start_single;
+
+            // Verify Accuracy
+            switch (t) {
+                case ADD:
+                case CHANGE:
+                    assertEquals(title, Unirest.get("/" + this.type + "/" + id_list.getLast()).asJson().getBody()
+                            .getObject().getJSONArray(this.type).getJSONObject(0).getString("title"));
+                    break;
+                case REMOVE:
+                    assertEquals(STATIC_CODE_NOT_FOUND, Unirest.get("/" + this.type + "/" + id_deleted).asJson().getStatus());
+                    break;
+            }
+
+            //undo single operation
+            switch (t) {
+                case ADD: removeLast(); break;
+                case CHANGE: removeLast(); addRandom(); break;
+                case REMOVE: addRandom(); break;
+            }
+
         }
-        long finish_single = System.nanoTime();
 
-        // Verify Accuracy
-        switch (t) {
-            case ADD:
-            case CHANGE:
-                assertEquals(title, Unirest.get("/" + this.type + "/" + id_list.getLast()).asJson().getBody()
-                        .getObject().getJSONArray(this.type).getJSONObject(0).getString("title"));
-                break;
-            case REMOVE:
-                assertEquals(STATIC_CODE_NOT_FOUND, Unirest.get("/" + this.type + "/" + id_deleted).asJson().getStatus());
-                break;
-        }
+        single_avg /= NUM_SAMPLES;
+
 
         // Reset state
         resetState();
@@ -108,10 +125,10 @@ public abstract class GenericPerformanceTest {
         long finish_whole = System.nanoTime();
         addLine(new String[] {
                 type, num+"", t.toString(),
-                (finish_whole - start_whole) + "", (finish_single - start_single)+""
+                (finish_whole - start_whole) + "", single_avg+""
         });
         System.out.println("Test " + t.toString() + " " + type + " with " + num + " of them in Server:");
         System.out.println("\tTotal Test Time: " + (finish_whole - start_whole) + " ns");
-        System.out.println("\tSingle " + type + " Add Time: " + (finish_single - start_single) + " ns");
+        System.out.println("\tSingle " + type + " Add Time: " + single_avg + " ns");
     }
 }
