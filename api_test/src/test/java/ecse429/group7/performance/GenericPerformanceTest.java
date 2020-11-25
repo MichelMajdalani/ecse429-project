@@ -9,11 +9,15 @@ import java.util.Random;
 import static ecse429.group7.performance.CSVWriter.addLine;
 import static org.junit.Assert.assertEquals;
 
+import java.lang.management.ManagementFactory;
+import com.sun.management.OperatingSystemMXBean;
+
 public abstract class GenericPerformanceTest {
     LinkedList<Integer> id_list;
     String type;
     RandomStringGenerator string_generator;
     Random number_generator;
+    OperatingSystemMXBean operatingSystemMXBean;
 
     public static final int STATIC_CODE_NOT_FOUND = 404;
     public static final int NUM_SAMPLES = 50;
@@ -26,6 +30,7 @@ public abstract class GenericPerformanceTest {
         string_generator = new RandomStringGenerator.Builder()
                 .withinRange('a', 'z').build();
         number_generator = new Random();
+        operatingSystemMXBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
     }
 
     public String getRandomString() {
@@ -78,6 +83,8 @@ public abstract class GenericPerformanceTest {
         // Setup
         addMany(num);
         long single_avg = 0;
+        double cpu = 0;
+        double memory_usage = 0;
 
         // Perform operation
         for (int i = 0; i < NUM_SAMPLES; i++) {
@@ -87,11 +94,22 @@ public abstract class GenericPerformanceTest {
             int id_deleted = 0;
 
             switch (t) {
-                case ADD: title = addRandom(); break;
-                case REMOVE: id_deleted = removeLast(); break;
-                case CHANGE: title = changeLast(); break;
+                case ADD:
+                    title = addRandom();
+                    break;
+                case REMOVE:
+                    id_deleted = removeLast();
+                    break;
+                case CHANGE:
+                    title = changeLast();
+                    break;
             }
             long finish_single = System.nanoTime();
+
+            cpu += operatingSystemMXBean.getProcessCpuLoad();
+            memory_usage += (double) (operatingSystemMXBean.getTotalPhysicalMemorySize()
+                    - operatingSystemMXBean.getFreePhysicalMemorySize())
+                    / operatingSystemMXBean.getTotalPhysicalMemorySize();
 
             single_avg += finish_single - start_single;
 
@@ -103,32 +121,40 @@ public abstract class GenericPerformanceTest {
                             .getObject().getJSONArray(this.type).getJSONObject(0).getString("title"));
                     break;
                 case REMOVE:
-                    assertEquals(STATIC_CODE_NOT_FOUND, Unirest.get("/" + this.type + "/" + id_deleted).asJson().getStatus());
+                    assertEquals(STATIC_CODE_NOT_FOUND,
+                            Unirest.get("/" + this.type + "/" + id_deleted).asJson().getStatus());
                     break;
             }
 
             //undo single operation
             switch (t) {
-                case ADD: removeLast(); break;
-                case CHANGE: removeLast(); addRandom(); break;
-                case REMOVE: addRandom(); break;
+                case ADD:
+                    removeLast();
+                    break;
+                case CHANGE:
+                    removeLast();
+                    addRandom();
+                    break;
+                case REMOVE:
+                    addRandom();
+                    break;
             }
 
         }
-
+        
+        cpu /= NUM_SAMPLES;
+        memory_usage /= NUM_SAMPLES;
         single_avg /= NUM_SAMPLES;
-
 
         // Reset state
         resetState();
 
         long finish_whole = System.nanoTime();
-        addLine(new String[] {
-                type, num+"", t.toString(),
-                (finish_whole - start_whole) + "", single_avg+""
-        });
+        addLine(new String[] { type, num + "", t.toString(), (finish_whole - start_whole) + "", single_avg + "", cpu + "", memory_usage + "", });
         System.out.println("Test " + t.toString() + " " + type + " with " + num + " of them in Server:");
         System.out.println("\tTotal Test Time: " + (finish_whole - start_whole) + " ns");
-        System.out.println("\tSingle " + type + " Add Time: " + single_avg + " ns");
+        System.out.println("\tSingle " + type + " " + t.toString() + " Time: " + single_avg + " ns");
+        System.out.println("\tCPU Usage: " + cpu * 100 + "%");
+        System.out.println("\tMemory Usage: " + memory_usage * 100 + "%");
     }
 }

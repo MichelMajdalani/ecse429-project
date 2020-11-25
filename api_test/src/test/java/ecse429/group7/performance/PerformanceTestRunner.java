@@ -41,7 +41,7 @@ public class PerformanceTestRunner extends BaseTest {
 
     @Parameterized.Parameters(name = "{0} {1}")
     public static Collection<Object[]> data() {
-        int[] sizeOpts = {10, 50, 100, 250, 500, 1000};
+        int[] sizeOpts = {2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 5096};
         String[] nameOpts = {"categories", "projects", "todos"};
         GenericPerformanceTest[] testers = {CATEGORIES_TESTER, PROJECTS_TESTER, TODOS_TESTER};
         ArrayList<Object[]> l = new ArrayList<>();
