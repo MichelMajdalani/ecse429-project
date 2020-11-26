@@ -12,7 +12,9 @@ public class CSVWriter {
                 "n",
                 "operation",
                 "total time (ns)",
-                "single operation time (ns)"
+                "single operation time (ns)",
+                "cpu usage %",
+                "memory usage %"
         }, false);
     }
 
